@@ -6,6 +6,7 @@ from django.contrib.auth.views import LoginView
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from django.shortcuts import redirect, render
+import hashlib
 
 from django.http import HttpResponse
 
@@ -25,7 +26,18 @@ class CustomLoginView(LoginView):
         password = form.cleaned_data['password']
 
         # Derive key from password using PBKDF2
-        salt = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
+        
+        # salt = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
+
+        # Get the logged-in user
+        user = self.request.user
+        # Get the username
+        username = user.username
+        # Hash the username
+        username_hash = hashlib.sha256(username.encode()).digest()
+        # Extract the first 16 bytes (128 bits) as the salt
+        salt = username_hash[:16]
+
         iterations = 100000
         key_length = 32
 
