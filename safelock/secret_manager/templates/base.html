@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{% get_available_languages as LANGUAGES %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% trans "SafeLock"|capfirst %}{% endblock title %}</title>
+    {% comment %} {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %} {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+{% if user.is_authenticated %}
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                    <div class="navbar-nav">
+                        <a class="nav-link" href="{% url 'index' %}">{% trans "home"|capfirst %}</a>
+                        <a class="nav-link" href="{% url 'password_list' %}">{% trans "password management"|capfirst %}</a>
+                        {% if user.is_staff or user.is_superuser %}
+                            <a class="nav-link" href="{% url 'admin:index' %}">{% trans "admin"|capfirst %}</a>
+                        {% endif %}
+                    </div>
+                    <div class="navbar-nav ms-auto">
+                        <div class="align-self-center">You are logged in as: <strong>{{ user.username }}</strong></div>
+                        <a class="nav-link" href="{% url 'logout' %}">{% trans "logout"|capfirst %}</a>
+                    </div>
+                </div> 
+            </div>
+        </nav>
+    </header>
+{% endif %}
+<main>
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% else %}
+            <p>{{ message }}</p>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+    <div class="container">
+        {% block content %}
+        {% endblock content %}
+    </div>
+</main>
+    <div class="row">
+        <footer>
+            <div class="row">   
+                <p>&copy; SafeLock. PTU12. 2023
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
