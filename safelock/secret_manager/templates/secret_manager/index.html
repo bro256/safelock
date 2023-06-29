@@ -2,4 +2,7 @@
 {% block title %}Welcome to SafeLock - secret manager{% endblock title %}
 {% block content %}
 <h1>SafeLock</h1>
+{% if user.is_authenticated %}
+<p>Auth - ok</p>
+{% endif %}
 {% endblock content %}

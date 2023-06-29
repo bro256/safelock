@@ -21,7 +21,7 @@
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                     <div class="navbar-nav">
                         <a class="nav-link" href="{% url 'index' %}">{% trans "home"|capfirst %}</a>
-                        <a class="nav-link" href="{% url 'password_list' %}">{% trans "password management"|capfirst %}</a>
+                        {% comment %} <a class="nav-link" href="{% url 'password_list' %}">{% trans "password management"|capfirst %}</a> {% endcomment %}
                         {% if user.is_staff or user.is_superuser %}
                             <a class="nav-link" href="{% url 'admin:index' %}">{% trans "admin"|capfirst %}</a>
                         {% endif %}
