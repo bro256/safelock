@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'secret_manager',
-    'user_profile'
+    'user_profile',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
