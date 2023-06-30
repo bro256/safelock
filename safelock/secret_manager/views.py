@@ -18,6 +18,7 @@ import hashlib
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
 import os
 
 from django.http import HttpResponse
@@ -60,6 +61,8 @@ class CustomLoginView(LoginView):
             iterations=iterations
         )
         derived_key = kdf.derive(password.encode('utf-8'))
+
+        ### USE FOR DEBUG ONLY
         print(derived_key)
         print(type(derived_key))
         print(derived_key.hex())
@@ -119,17 +122,25 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
             # key = self.request.session['derived_key'].encode('utf-8')
             key_in_hex = self.request.session.get('derived_key')
             key = bytes.fromhex(key_in_hex)
+
+            ### USE FOR DEBUG ONLY
             print("KEY in hex: ", key_in_hex)
             print("KEY: ", key)
+            print("PASSWORD TYPE: ", type(password))
+            print("PASSWORD: ", password)
+            
             # key = request.session.get('derived_key')
             iv = os.urandom(16)
+            
+            # Create a PKCS7 padding object with the block size
+            block_size = algorithms.AES.block_size // 8
+            padder = padding.PKCS7(block_size * 8).padder()
+
+            # Pad the password
+            padded_password = padder.update(password.encode()) + padder.finalize()
+
             cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
             encryptor = cipher.encryptor()
-
-            # Pad the password to a multiple of the block size
-            block_size = algorithms.AES.block_size // 8
-            padded_password = password.encode() + (block_size - len(password) % block_size) * b'\0'
-
             encrypted_password = encryptor.update(padded_password) + encryptor.finalize()
 
             entry = form.save(commit=False)
@@ -163,8 +174,45 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
     # Checks that the user passes the given test
     def test_func(self):
         return self.request.user.is_authenticated
+
+
+class PasswordEntryDetailView(generic.DetailView):
+    model = PasswordEntry
+    template_name = "password_entry_detail.html"
     
+class PasswordEntryDetailView(generic.DetailView):
+    model = PasswordEntry
+    template_name = "password_entry_detail.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
+        # Retrieve the encrypted password and IV from the model instance
+        encrypted_password = self.object.encrypted_password
+        iv = self.object.encryption_iv
 
+        # Retrieve the derived key from the session
+        derived_key_in_hex = self.request.session.get('derived_key')
+        derived_key = bytes.fromhex(derived_key_in_hex)
 
+        # Create the cipher with the derived key and IV
+        cipher = Cipher(algorithms.AES(derived_key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+
+        # Decrypt the password
+        decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
+
+        # Remove padding from the decrypted password
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        unpadded_password = unpadder.update(decrypted_password) + unpadder.finalize()
+
+        # Convert the decrypted password to a string
+        decrypted_password_str = unpadded_password.decode('utf-8')
+
+        # Use the decrypted password as needed
+        print("Decrypted Password:", decrypted_password_str)
+
+        # Add the decrypted password to the context
+        context['decrypted_password'] = unpadded_password.decode('utf-8')
+
+        return context
