@@ -2,6 +2,11 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.views import generic
 from . models import PasswordEntry
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse, reverse_lazy
+from typing import Any, Dict
+from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView
@@ -82,4 +87,33 @@ class PasswordEntryListView(generic.ListView):
     
     def get_queryset(self):
         return self.model.objects.filter(owner=self.request.user)
+    
+
+class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
+    model = PasswordEntry
+    form_class = PasswordEntryForm
+    template_name = 'secret_manager/password_entry_form.html'
+    success_url = reverse_lazy('password_entry_list')
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        return context
+    
+    def get_initial(self) -> Dict[str, Any]:
+        initial = super().get_initial()
+        initial['owner'] = self.request.user
+        return initial
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        messages.success(self.request, _('Password entry created successfully!'))
+        return super().form_valid(form)
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        return form
+
+    # Checks that the user passes the given test
+    def test_func(self):
+        return self.request.user.is_authenticated
 
