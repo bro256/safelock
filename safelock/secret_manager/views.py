@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.db.models import Q
 from django.views import generic
-from . models import Password
+from . models import PasswordEntry
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView
@@ -72,3 +72,14 @@ def DerivedKeyView(request):
     else:
         return HttpResponse("Derived key not found in session.")
     
+
+
+
+class PasswordEntryListView(generic.ListView):
+    model = PasswordEntry
+    # paginate_by = 10
+    template_name = "secret_manager/password_entry_list.html"
+    
+    def get_queryset(self):
+        return self.model.objects.filter(owner=self.request.user)
+

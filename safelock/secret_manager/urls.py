@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('passwords/', views.PasswordEntryListView.as_view(), name='password_entry_list'),
     path('derived_key/', views.DerivedKeyView, name='derived_key'),
     path('accounts/login/', views.CustomLoginView.as_view(), name='login'),
 
