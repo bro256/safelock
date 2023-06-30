@@ -8,12 +8,12 @@ from django.urls import reverse
 User = get_user_model()
 
 
-class Password(models.Model):
+class PasswordEntry(models.Model):
     owner = models.ForeignKey(
         User,
         verbose_name=_("owner"),
         on_delete=models.CASCADE,
-        related_name='passwords',
+        related_name='password_entries',
         null=True, blank=True,
     )
     title = models.CharField(_('title'), max_length=50)
@@ -24,21 +24,21 @@ class Password(models.Model):
 
     created_at = models.DateTimeField(_("Created"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated"), auto_now=True)
-    is_in_favourites = models.BooleanField(default=False)
+    is_in_bookmarks = models.BooleanField(default=False)
     is_in_trash = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['is_in_favourites', 'website']
-        verbose_name = _("password")
-        verbose_name_plural = _("passwords")
+        ordering = ['is_in_bookmarks', 'website']
+        verbose_name = _("password entry")
+        verbose_name_plural = _("password entries")
 
-    def add_to_favourites(password):
-        password.is_in_favourites = True
-        password.save()
+    def toggle_bookmark(self):
+        self.is_in_bookmarks = not self.is_in_bookmarks
+        self.save()
 
-    def move_to_trash(password):
-        password.is_in_trash = True
-        password.save()
+    def toggle_trash(self):
+        self.is_in_trash = not self.is_in_trash
+        self.save()
 
     def __str__(self):
         return f"{self.website}: {self.encrypted_password}"

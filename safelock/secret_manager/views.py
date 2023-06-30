@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from django.db.models import Q
 from django.views import generic
+from . models import Password
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView
@@ -69,3 +71,4 @@ def DerivedKeyView(request):
         return HttpResponse(f"Derived key (FOR TESTING PURPOSES ONLY): {derived_key_hex}")
     else:
         return HttpResponse("Derived key not found in session.")
+    
