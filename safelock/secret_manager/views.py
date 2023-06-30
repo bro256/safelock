@@ -15,6 +15,10 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from django.shortcuts import redirect, render
 import hashlib
+from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+import os
 
 from django.http import HttpResponse
 
@@ -56,8 +60,13 @@ class CustomLoginView(LoginView):
             iterations=iterations
         )
         derived_key = kdf.derive(password.encode('utf-8'))
+        print(derived_key)
+        print(type(derived_key))
+        print(derived_key.hex())
 
         # Store the derived key in the session
+        # self.request.session['derived_key'] = derived_key.hex()
+        # self.request.session['derived_key'] = derived_key
         self.request.session['derived_key'] = derived_key.hex()
 
         return super().form_valid(form)
@@ -96,6 +105,43 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
     template_name = 'secret_manager/password_entry_form.html'
     success_url = reverse_lazy('password_entry_list')
 
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            password = form.cleaned_data['password']
+
+            backend = default_backend()
+            # key = os.urandom(32)
+            # key = self.request.session['derived_key'].encode('utf-8')
+            key_in_hex = self.request.session.get('derived_key')
+            key = bytes.fromhex(key_in_hex)
+            print("KEY in hex: ", key_in_hex)
+            print("KEY: ", key)
+            # key = request.session.get('derived_key')
+            iv = os.urandom(16)
+            cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+            encryptor = cipher.encryptor()
+
+            # Pad the password to a multiple of the block size
+            block_size = algorithms.AES.block_size // 8
+            padded_password = password.encode() + (block_size - len(password) % block_size) * b'\0'
+
+            encrypted_password = encryptor.update(padded_password) + encryptor.finalize()
+
+            entry = form.save(commit=False)
+            entry.owner = request.user
+            entry.encrypted_password = encrypted_password
+            entry.encryption_iv = iv
+            entry.save()
+
+            return redirect(self.success_url)
+
+        return render(request, self.template_name, {'form': form})
+
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         return context
@@ -117,4 +163,8 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
     # Checks that the user passes the given test
     def test_func(self):
         return self.request.user.is_authenticated
+    
+
+
+
 
