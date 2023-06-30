@@ -46,6 +46,12 @@ class CustomLoginView(LoginView):
         user = self.request.user
         # Get the username
         username = user.username
+
+
+        self.user = form.get_user()
+        username = self.user.username
+
+
         # Hash the username
         username_hash = hashlib.sha256(username.encode()).digest()
         # Extract the first 16 bytes (128 bits) as the salt
@@ -63,7 +69,10 @@ class CustomLoginView(LoginView):
         derived_key = kdf.derive(password.encode('utf-8'))
 
         ### USE FOR DEBUG ONLY
-        print(derived_key)
+    
+        print("User: ", username, " Derived key:", derived_key)
+        print("Salt: ", salt)
+        print("Pass: ", password)
         print(type(derived_key))
         print(derived_key.hex())
 
@@ -138,6 +147,7 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
 
             # Pad the password
             padded_password = padder.update(password.encode()) + padder.finalize()
+            print("CREATE VIEW PADDED PASSWORD", padded_password)
 
             cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
             encryptor = cipher.encryptor()
@@ -147,6 +157,7 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
             entry.owner = request.user
             entry.encrypted_password = encrypted_password
             entry.encryption_iv = iv
+            print("IV used for encryption and stored to database", iv)
             entry.save()
 
             return redirect(self.success_url)
@@ -178,11 +189,7 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
 
 class PasswordEntryDetailView(generic.DetailView):
     model = PasswordEntry
-    template_name = "password_entry_detail.html"
-    
-class PasswordEntryDetailView(generic.DetailView):
-    model = PasswordEntry
-    template_name = "password_entry_detail.html"
+    template_name = "secret_manager/password_entry_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -197,12 +204,14 @@ class PasswordEntryDetailView(generic.DetailView):
 
         # Create the cipher with the derived key and IV
         cipher = Cipher(algorithms.AES(derived_key), modes.CBC(iv), backend=default_backend())
+        print("IV retreived from database and used for decryption", iv)
         decryptor = cipher.decryptor()
 
         # Decrypt the password
         decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
 
         # Remove padding from the decrypted password
+        print("DETAIL VIEW PADDED PASSWORD", decrypted_password)
         unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
         unpadded_password = unpadder.update(decrypted_password) + unpadder.finalize()
 
