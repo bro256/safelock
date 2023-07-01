@@ -21,13 +21,17 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 import os
 
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
 from django.http import HttpResponse
+
 
 def index(request):
     context = {
         'test' : 'test',
     }
     return render(request, 'secret_manager/index.html', context)
+
 
 def derive_key(username, password):
     # Hash the username
@@ -94,43 +98,28 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
         form = self.form_class()
         return render(request, self.template_name, {'form': form})
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
         if form.is_valid():
             password = form.cleaned_data['password']
-
-            backend = default_backend()
-            # key = os.urandom(32)
-            # key = self.request.session['derived_key'].encode('utf-8')
             key_in_hex = self.request.session.get('derived_key')
             key = bytes.fromhex(key_in_hex)
+            iv = os.urandom(12)
 
-            ### USE FOR DEBUG ONLY
-            print("KEY in hex: ", key_in_hex)
-            print("KEY: ", key)
-            print("PASSWORD TYPE: ", type(password))
-            print("PASSWORD: ", password)
-            
-            # key = request.session.get('derived_key')
-            iv = os.urandom(16)
-            
-            # Create a PKCS7 padding object with the block size
-            block_size = algorithms.AES.block_size // 8
-            padder = padding.PKCS7(block_size * 8).padder()
-
-            # Pad the password
-            padded_password = padder.update(password.encode()) + padder.finalize()
-            print("CREATE VIEW PADDED PASSWORD", padded_password)
-
-            cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+            # Encrypt the password using AES-GCM mode
+            cipher = Cipher(algorithms.AES(key), modes.GCM(iv))
             encryptor = cipher.encryptor()
-            encrypted_password = encryptor.update(padded_password) + encryptor.finalize()
+            ciphertext = encryptor.update(password.encode()) + encryptor.finalize()
 
+            # Retrieve the authentication tag from the encryptor
+            auth_tag = encryptor.tag
+
+            # Save the encrypted password, IV, and tag to the model instance
             entry = form.save(commit=False)
             entry.owner = request.user
-            entry.encrypted_password = encrypted_password
+            entry.encrypted_password = ciphertext
             entry.encryption_iv = iv
-            print("IV used for encryption and stored to database", iv)
+            entry.auth_tag = auth_tag
             entry.save()
 
             return redirect(self.success_url)
@@ -167,34 +156,26 @@ class PasswordEntryDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Retrieve the encrypted password and IV from the model instance
+        # Retrieve the encrypted password, IV, and tag from the model instance
         encrypted_password = self.object.encrypted_password
         iv = self.object.encryption_iv
+        auth_tag = self.object.auth_tag
 
         # Retrieve the derived key from the session
         derived_key_in_hex = self.request.session.get('derived_key')
         derived_key = bytes.fromhex(derived_key_in_hex)
 
-        # Create the cipher with the derived key and IV
-        cipher = Cipher(algorithms.AES(derived_key), modes.CBC(iv), backend=default_backend())
-        print("IV retreived from database and used for decryption", iv)
+        # Create the AES-GCM cipher with the derived key, IV, and tag
+        cipher = Cipher(algorithms.AES(derived_key), modes.GCM(iv, auth_tag))
         decryptor = cipher.decryptor()
 
         # Decrypt the password
         decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
 
-        # Remove padding from the decrypted password
-        print("DETAIL VIEW PADDED PASSWORD", decrypted_password)
-        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-        unpadded_password = unpadder.update(decrypted_password) + unpadder.finalize()
-
         # Convert the decrypted password to a string
-        decrypted_password_str = unpadded_password.decode('utf-8')
-
-        # Use the decrypted password as needed
-        print("Decrypted Password:", decrypted_password_str)
+        decrypted_password_str = decrypted_password.decode('utf-8')
 
         # Add the decrypted password to the context
-        context['decrypted_password'] = unpadded_password.decode('utf-8')
+        context['decrypted_password'] = decrypted_password_str
 
         return context

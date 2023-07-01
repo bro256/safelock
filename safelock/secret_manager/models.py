@@ -18,8 +18,9 @@ class PasswordEntry(models.Model):
     )
     title = models.CharField(_('title'), max_length=50)
     username = models.CharField(_('username'), max_length=50)
-    encrypted_password = models.BinaryField(_('password'), max_length=50)
+    encrypted_password = models.BinaryField(_('encrypted password'), max_length=50)
     encryption_iv = models.BinaryField(max_length=32)
+    auth_tag = models.BinaryField(max_length=16, null=True, blank=True)  # Assuming a 16-byte tag size for AES-GCM
     website = models.CharField(_('website'), max_length=250)
 
     created_at = models.DateTimeField(_("Created"), auto_now_add=True)
