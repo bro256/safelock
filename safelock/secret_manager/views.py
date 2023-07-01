@@ -20,6 +20,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 import os
+from django.contrib.auth.views import PasswordChangeView
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -179,3 +180,62 @@ class PasswordEntryDetailView(generic.DetailView):
         context['decrypted_password'] = decrypted_password_str
 
         return context
+
+
+def reencrypt_passwords(user, old_password, new_password):
+    # Derive the old and new keys
+    old_key = derive_key(user.username, old_password)
+    new_key = derive_key(user.username, new_password)
+
+    # Retrieve all the encrypted passwords associated with the user
+    entries = PasswordEntry.objects.filter(owner=user)
+
+    # Iterate over each entry and re-encrypt the password
+    for entry in entries:
+        # Decrypt the password using the old key and IV
+        cipher = Cipher(algorithms.AES(old_key), modes.GCM(entry.encryption_iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        decrypted_password = decryptor.update(entry.encrypted_password) + decryptor.finalize()
+
+        # Encrypt the decrypted password using the new key and IV
+        iv = os.urandom(12)
+        cipher = Cipher(algorithms.AES(new_key), modes.GCM(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        encrypted_password = encryptor.update(decrypted_password) + encryptor.finalize()
+
+        # Update the entry with the new encrypted password and IV
+        entry.encrypted_password = encrypted_password
+        entry.encryption_iv = iv
+        entry.save()
+
+
+# class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+#     success_url = reverse_lazy('password_reset_complete')
+
+#     def form_valid(self, form):
+#         # Call the parent form_valid method to reset the user's password
+#         response = super().form_valid(form)
+
+#         # Re-encrypt passwords for the user
+#         reencrypt_passwords(self.user, self.user.password, form.cleaned_data['new_password1'])
+#         print("User: ", self.user)
+#         print(self.user.password)
+#         print(form.cleaned_data['new_password1'])
+
+#         return response
+    
+class CustomPasswordChangeView(PasswordChangeView):
+    # template_name = 'password_change.html'
+    success_url = '/password_change_done/'
+
+    def form_valid(self, form):
+        # Change the user's password
+        response = super().form_valid(form)
+
+        # Reencrypt passwords with the new password
+        reencrypt_passwords(self.request.user, form.cleaned_data['old_password'], form.cleaned_data['new_password2'])
+
+        return response
+
+    def get_success_url(self):
+        return self.success_url

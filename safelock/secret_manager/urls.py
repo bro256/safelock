@@ -8,6 +8,7 @@ urlpatterns = [
     path('password_entry/<int:pk>/', views.PasswordEntryDetailView.as_view(), name='password_entry_detail'),
     # path('derived_key/', views.DerivedKeyView, name='derived_key'),
     path('accounts/login/', views.CustomLoginView.as_view(), name='login'),
+    path('accounts/password_change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
 
     # path('secrets/', views.SecretListView.as_view(), name='secret_list'),
 ]
