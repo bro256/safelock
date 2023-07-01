@@ -4,17 +4,20 @@ My first Python project related to cryptography.
 ## Cryptography
 
 ### Python cryptography libraries
-- cryptography
+- [cryptography](https://cryptography.io/en/latest/)
 
 ### Key derivation function
 PBKDF2
-
-- iterations: 600 000
-- salt: 128 bits
-- key length: 32 bytes (256 bits)
+- Iterations: 600 000
+- Salt: 128 bits
+- Key length: 32 bytes (256 bits)
 
 ### Symetric encryption
-AES-256
+- Algorithm: AES-256
+- Key length: 256 bits
+- Mode: CBC
+- Initialization vector (IV): random 256 bits, different for every record
+- Padding: PKCS7
 
 ### Hashing
-SHA-256
+- SHA-256
