@@ -29,6 +29,31 @@ def index(request):
     }
     return render(request, 'secret_manager/index.html', context)
 
+def derive_key(username, password):
+    # Hash the username
+    username_hash = hashlib.sha256(username.encode()).digest()
+
+    # PBKDF2 parameters
+    salt = username_hash[:16]  # Extract the first 16 bytes (128 bits) as the salt
+    iterations = 100000
+    key_length = 32
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=key_length,
+        salt=salt,
+        iterations=iterations
+    )
+
+    # PBKDF2 to get derived key
+    derived_key = kdf.derive(password.encode('utf-8'))
+
+    ### USE FOR DEBUG ONLY!!!
+    print("Salt: ", salt)
+    print("Derived key type: ", type(derived_key))
+    print("Derived key in HEX: ", derived_key.hex())
+
+    return derived_key.hex()
+
 
 class CustomLoginView(LoginView):
     def form_valid(self, form):
@@ -38,68 +63,16 @@ class CustomLoginView(LoginView):
         # Get the entered password
         password = form.cleaned_data['password']
 
-        # Derive key from password using PBKDF2
-        
-        # salt = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
-
-        # Get the logged-in user
-        user = self.request.user
-        # Get the username
-        username = user.username
-
-
-        self.user = form.get_user()
+        # Get the logged in user and username
         username = self.user.username
+        derived_key = derive_key(username, password)
+        self.request.session['derived_key'] = derived_key
 
-
-        # Hash the username
-        username_hash = hashlib.sha256(username.encode()).digest()
-        # Extract the first 16 bytes (128 bits) as the salt
-        salt = username_hash[:16]
-
-        iterations = 100000
-        key_length = 32
-
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=key_length,
-            salt=salt,
-            iterations=iterations
-        )
-        derived_key = kdf.derive(password.encode('utf-8'))
-
-        ### USE FOR DEBUG ONLY
-    
+        ### USE FOR DEBUG ONLY!!!
         print("User: ", username, " Derived key:", derived_key)
-        print("Salt: ", salt)
         print("Pass: ", password)
-        print(type(derived_key))
-        print(derived_key.hex())
-
-        # Store the derived key in the session
-        # self.request.session['derived_key'] = derived_key.hex()
-        # self.request.session['derived_key'] = derived_key
-        self.request.session['derived_key'] = derived_key.hex()
 
         return super().form_valid(form)
-
-
-def DerivedKeyView(request):
-    # Retrieve the derived key from the session
-    derived_key_str = request.session.get('derived_key')
-
-    if derived_key_str:
-        # Convert the derived key from string representation to bytes
-        derived_key = bytes.fromhex(derived_key_str)
-
-        # Convert the derived key back to its string representation
-        derived_key_hex = derived_key.hex()
-
-        return HttpResponse(f"Derived key (FOR TESTING PURPOSES ONLY): {derived_key_hex}")
-    else:
-        return HttpResponse("Derived key not found in session.")
-    
-
 
 
 class PasswordEntryListView(generic.ListView):
