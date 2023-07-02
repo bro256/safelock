@@ -52,10 +52,8 @@ def derive_key(username, password):
     # PBKDF2 to get derived key
     derived_key = kdf.derive(password.encode('utf-8'))
 
-    ### USE FOR DEBUG ONLY!!!
-    print("Salt: ", salt)
-    print("Derived key type: ", type(derived_key))
-    print("Derived key in HEX: ", derived_key.hex())
+    ### FOR DEBUG ONLY!!!
+    print(f"KEY DERIVATION FUNCTION. Username: {username} Pass:{password} Salt: {salt} Derived key: {derived_key} Derived key in HEX (return): {derived_key.hex()}")
 
     return derived_key.hex()
 
@@ -72,10 +70,6 @@ class CustomLoginView(LoginView):
         username = self.user.username
         derived_key = derive_key(username, password)
         self.request.session['derived_key'] = derived_key
-
-        ### USE FOR DEBUG ONLY!!!
-        print("User: ", username, " Derived key:", derived_key)
-        print("Pass: ", password)
 
         return super().form_valid(form)
 
@@ -187,25 +181,37 @@ def reencrypt_passwords(user, old_password, new_password):
     old_key = derive_key(user.username, old_password)
     new_key = derive_key(user.username, new_password)
 
+    ### FOR DEBUG ONLY!!!
+    print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
+
     # Retrieve all the encrypted passwords associated with the user
     entries = PasswordEntry.objects.filter(owner=user)
 
     # Iterate over each entry and re-encrypt the password
     for entry in entries:
         # Decrypt the password using the old key and IV
-        cipher = Cipher(algorithms.AES(old_key), modes.GCM(entry.encryption_iv), backend=default_backend())
+        cipher = Cipher(algorithms.AES(bytes.fromhex(old_key)), modes.GCM(entry.encryption_iv, entry.auth_tag))
         decryptor = cipher.decryptor()
         decrypted_password = decryptor.update(entry.encrypted_password) + decryptor.finalize()
+        decrypted_password_str = decrypted_password.decode('utf-8')
+
+        ### FOR DEBUG ONLY!!!
+        print(f"DECRYPTION. ID: Encrypted pass: {entry.encrypted_password} iv: {entry.encryption_iv} tag: {entry.auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
 
         # Encrypt the decrypted password using the new key and IV
         iv = os.urandom(12)
-        cipher = Cipher(algorithms.AES(new_key), modes.GCM(iv), backend=default_backend())
+        cipher = Cipher(algorithms.AES(bytes.fromhex(new_key)), modes.GCM(iv))
         encryptor = cipher.encryptor()
         encrypted_password = encryptor.update(decrypted_password) + encryptor.finalize()
+        auth_tag = encryptor.tag
+        
+        ### FOR DEBUG ONLY!!!
+        print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
 
         # Update the entry with the new encrypted password and IV
         entry.encrypted_password = encrypted_password
         entry.encryption_iv = iv
+        entry.auth_tag = auth_tag
         entry.save()
 
 
@@ -226,7 +232,8 @@ def reencrypt_passwords(user, old_password, new_password):
     
 class CustomPasswordChangeView(PasswordChangeView):
     # template_name = 'password_change.html'
-    success_url = '/password_change_done/'
+    # success_url = '/profile/password_change_done/'
+    
 
     def form_valid(self, form):
         # Change the user's password
