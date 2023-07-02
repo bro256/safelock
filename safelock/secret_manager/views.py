@@ -1,30 +1,22 @@
-from django.shortcuts import render
-from django.db.models import Q
-from django.views import generic
-from . models import PasswordEntry
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.urls import reverse, reverse_lazy
-from typing import Any, Dict
-from django.contrib import messages
-from django.utils.translation import gettext_lazy as _
 from . forms import PasswordEntryForm
-
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.views import LoginView
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives import hashes
+from . models import PasswordEntry
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import LoginView, PasswordChangeView
+from django.db.models import Q
 from django.shortcuts import redirect, render
-import hashlib
-from cryptography.fernet import Fernet
-from cryptography.hazmat.backends import default_backend
+from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext_lazy as _
+from django.views import generic
+from typing import Any, Dict
+
+# from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding
+import hashlib
 import os
-from django.contrib.auth.views import PasswordChangeView
-
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
-from django.http import HttpResponse
 
 
 def index(request):
@@ -214,26 +206,8 @@ def reencrypt_passwords(user, old_password, new_password):
         entry.auth_tag = auth_tag
         entry.save()
 
-
-# class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-#     success_url = reverse_lazy('password_reset_complete')
-
-#     def form_valid(self, form):
-#         # Call the parent form_valid method to reset the user's password
-#         response = super().form_valid(form)
-
-#         # Re-encrypt passwords for the user
-#         reencrypt_passwords(self.user, self.user.password, form.cleaned_data['new_password1'])
-#         print("User: ", self.user)
-#         print(self.user.password)
-#         print(form.cleaned_data['new_password1'])
-
-#         return response
     
 class CustomPasswordChangeView(PasswordChangeView):
-    # template_name = 'password_change.html'
-    # success_url = '/profile/password_change_done/'
-    
 
     def form_valid(self, form):
         # Change the user's password
@@ -241,6 +215,9 @@ class CustomPasswordChangeView(PasswordChangeView):
 
         # Reencrypt passwords with the new password
         reencrypt_passwords(self.request.user, form.cleaned_data['old_password'], form.cleaned_data['new_password2'])
+        
+        # Log out the user to get new PBKDF2 derived key
+        logout(self.request)
 
         return response
 
