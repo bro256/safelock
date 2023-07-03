@@ -9,6 +9,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
+from django.views.generic.edit import UpdateView
 from typing import Any, Dict
 
 # from cryptography.hazmat.backends import default_backend
@@ -143,32 +144,39 @@ class PasswordEntryDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Retrieve the encrypted password, IV, and tag from the model instance
-        encrypted_password = self.object.encrypted_password
-        iv = self.object.encryption_iv
-        auth_tag = self.object.auth_tag
+        # # Retrieve the encrypted password, IV, and tag from the model instance
+        # encrypted_password = self.object.encrypted_password
+        # iv = self.object.encryption_iv
+        # auth_tag = self.object.auth_tag
 
         # Retrieve the derived key from the session
         derived_key_in_hex = self.request.session.get('derived_key')
         derived_key = bytes.fromhex(derived_key_in_hex)
 
-        # Create the AES-GCM cipher with the derived key, IV, and tag
-        cipher = Cipher(algorithms.AES(derived_key), modes.GCM(iv, auth_tag))
-        decryptor = cipher.decryptor()
+        # # Create the AES-GCM cipher with the derived key, IV, and tag
+        # cipher = Cipher(algorithms.AES(derived_key), modes.GCM(iv, auth_tag))
+        # decryptor = cipher.decryptor()
 
-        # Decrypt the password
-        decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
+        # # Decrypt the password
+        # decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
 
-        # Convert the decrypted password to a string
-        decrypted_password_str = decrypted_password.decode('utf-8')
+        # # Convert the decrypted password to a string
+        # decrypted_password_str = decrypted_password.decode('utf-8')
 
-        # Add the decrypted password to the context
+        # # Add the decrypted password to the context
+
+        # Retrieve the current PasswordEntry object
+        password_entry = self.get_object()
+
+        # Call the decrypt_password function to decrypt the password
+        decrypted_password_str = decrypt_password(password_entry, derived_key)
+
         context['decrypted_password'] = decrypted_password_str
 
         return context
 
 
-def reencrypt_passwords(user, old_password, new_password):
+def reencrypt_all_passwords(user, old_password, new_password):
     # Derive the old and new keys
     old_key = derive_key(user.username, old_password)
     new_key = derive_key(user.username, new_password)
@@ -214,7 +222,7 @@ class CustomPasswordChangeView(PasswordChangeView):
         response = super().form_valid(form)
 
         # Reencrypt passwords with the new password
-        reencrypt_passwords(self.request.user, form.cleaned_data['old_password'], form.cleaned_data['new_password2'])
+        reencrypt_all_passwords(self.request.user, form.cleaned_data['old_password'], form.cleaned_data['new_password2'])
         
         # Log out the user to get new PBKDF2 derived key
         logout(self.request)
@@ -223,3 +231,106 @@ class CustomPasswordChangeView(PasswordChangeView):
 
     def get_success_url(self):
         return self.success_url
+
+
+def decrypt_password(password_entry, derived_key):
+    # Retrieve the encrypted password, IV, and tag from the model instance
+    encrypted_password = password_entry.encrypted_password
+    iv = password_entry.encryption_iv
+    tag = password_entry.auth_tag
+
+    # Create the AES-GCM cipher with the derived key, IV, and tag
+    decryptor = Cipher(
+        algorithms.AES(derived_key),
+        modes.GCM(iv, tag),
+    ).decryptor()
+
+    # Decrypt the password
+    decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
+
+    # Convert the decrypted password to a string
+    decrypted_password_str = decrypted_password.decode('utf-8')
+
+    return decrypted_password_str
+
+
+class PasswordEntryUpdateView(UpdateView):
+    model = PasswordEntry
+    form_class = PasswordEntryForm
+    template_name = 'secret_manager/password_entry_form.html'
+    success_url = '/password_entriy_list/'
+
+    def form_valid(self, form):
+        # Save the updated password entry
+        response = super().form_valid(form)
+
+        # Handle password re-encryption if needed
+        # Add your custom re-encryption logic here
+
+        return response
+
+
+# views.py
+# from django.shortcuts import render, redirect
+# from .forms import PasswordEntryForm, PasswordEntryUpdateForm
+
+# def PasswordEntryUpdateView(request, pk):
+#     instance = PasswordEntry.objects.get(pk=pk)
+
+#     # Retrieve the derived key from the session
+#     derived_key_in_hex = request.session.get('derived_key')
+#     derived_key = bytes.fromhex(derived_key_in_hex)
+#     decrypted_value = decrypt_password(instance, derived_key)
+
+
+#     if request.method == 'POST':
+#         form = PasswordEntryUpdateForm(request.POST, instance=instance)
+#         if form.is_valid():
+#             # edited_value = form.cleaned_data['encrypted_field']  # Get the edited value
+#             # encrypted_value = encrypt_function(edited_value)  # Encrypt the edited value
+#             # instance.encrypted_field = encrypted_value
+#             instance.save()
+#             return redirect('success-url')
+#     else:
+#         # form = PasswordEntryUpdateForm(instance=instance, initial={'password': decrypted_value})
+#         form = PasswordEntryUpdateForm(instance=instance, initial={'decrypted_password': decrypted_value})
+
+#         print("Decrypted value: ", decrypted_value)
+
+#     return render(request, 'secret_manager/password_entry_form.html', {'form': form})
+
+
+
+from .forms import PasswordEntryUpdateForm
+
+
+class PasswordEntryUpdateView(UpdateView):
+    model = PasswordEntry
+    form_class = PasswordEntryUpdateForm
+    template_name = 'secret_manager/password_entry_form.html'
+    success_url = '/password_entriy_list/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Retrieve the derived key from the session
+        derived_key_in_hex = self.request.session.get('derived_key')
+        derived_key = bytes.fromhex(derived_key_in_hex)
+        decrypted_value = decrypt_password(self.object, derived_key)
+
+        # Add the decrypted password to the context
+        context['password'] = decrypted_value
+        print(context)
+
+        # Set the decrypted password value in the form field initial data
+        context['form'].initial['password'] = decrypted_value
+
+        return context
+
+    def form_valid(self, form):
+        # Perform any necessary encryption or other operations before saving
+        instance = form.save(commit=False)
+        # Save the encrypted data or perform any additional logic
+        instance.save()
+        return redirect(self.get_success_url())
+

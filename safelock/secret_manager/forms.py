@@ -1,5 +1,6 @@
 from django import forms
 from . import models
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 class PasswordEntryForm(forms.ModelForm):
    
@@ -12,3 +13,17 @@ class PasswordEntryForm(forms.ModelForm):
         widgets = {
             'owner' : forms.HiddenInput(),
         }
+
+class PasswordEntryUpdateForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.TextInput)
+
+    class Meta:
+        model = models.PasswordEntry
+        fields = ('title', 'username', 'password', 'website', 'is_in_bookmarks')
+        widgets = {
+            'owner': forms.HiddenInput(),
+            'encrypted_password': forms.HiddenInput(),
+            'encryption_iv': forms.HiddenInput(),
+            'auth_tag': forms.HiddenInput(),
+        }
+
