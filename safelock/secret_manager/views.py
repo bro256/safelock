@@ -1,4 +1,4 @@
-from . forms import PasswordEntryForm
+from . forms import PasswordEntryForm, PasswordEntryUpdateForm
 from . models import PasswordEntry
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -256,59 +256,9 @@ def decrypt_password(password_entry, derived_key):
 
 class PasswordEntryUpdateView(UpdateView):
     model = PasswordEntry
-    form_class = PasswordEntryForm
-    template_name = 'secret_manager/password_entry_form.html'
-    success_url = '/password_entriy_list/'
-
-    def form_valid(self, form):
-        # Save the updated password entry
-        response = super().form_valid(form)
-
-        # Handle password re-encryption if needed
-        # Add your custom re-encryption logic here
-
-        return response
-
-
-# views.py
-# from django.shortcuts import render, redirect
-# from .forms import PasswordEntryForm, PasswordEntryUpdateForm
-
-# def PasswordEntryUpdateView(request, pk):
-#     instance = PasswordEntry.objects.get(pk=pk)
-
-#     # Retrieve the derived key from the session
-#     derived_key_in_hex = request.session.get('derived_key')
-#     derived_key = bytes.fromhex(derived_key_in_hex)
-#     decrypted_value = decrypt_password(instance, derived_key)
-
-
-#     if request.method == 'POST':
-#         form = PasswordEntryUpdateForm(request.POST, instance=instance)
-#         if form.is_valid():
-#             # edited_value = form.cleaned_data['encrypted_field']  # Get the edited value
-#             # encrypted_value = encrypt_function(edited_value)  # Encrypt the edited value
-#             # instance.encrypted_field = encrypted_value
-#             instance.save()
-#             return redirect('success-url')
-#     else:
-#         # form = PasswordEntryUpdateForm(instance=instance, initial={'password': decrypted_value})
-#         form = PasswordEntryUpdateForm(instance=instance, initial={'decrypted_password': decrypted_value})
-
-#         print("Decrypted value: ", decrypted_value)
-
-#     return render(request, 'secret_manager/password_entry_form.html', {'form': form})
-
-
-
-from .forms import PasswordEntryUpdateForm
-
-
-class PasswordEntryUpdateView(UpdateView):
-    model = PasswordEntry
     form_class = PasswordEntryUpdateForm
     template_name = 'secret_manager/password_entry_form.html'
-    success_url = '/password_entriy_list/'
+    success_url = 'password_entry_list'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -328,9 +278,27 @@ class PasswordEntryUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
-        # Perform any necessary encryption or other operations before saving
+        # Operations before saving
         instance = form.save(commit=False)
-        # Save the encrypted data or perform any additional logic
+        
+        password = form.cleaned_data['password']
+        key_in_hex = self.request.session.get('derived_key')
+        key = bytes.fromhex(key_in_hex)
+        iv = os.urandom(12)
+
+        # Encrypt the password using AES-GCM mode
+        cipher = Cipher(algorithms.AES(key), modes.GCM(iv))
+        encryptor = cipher.encryptor()
+        ciphertext = encryptor.update(password.encode()) + encryptor.finalize()
+
+        # Retrieve the authentication tag from the encryptor
+        auth_tag = encryptor.tag
+
+        # Save the encrypted password, IV, and tag to the model instance
+        instance = form.save(commit=False)
+        instance.encrypted_password = ciphertext
+        instance.encryption_iv = iv
+        instance.auth_tag = auth_tag
         instance.save()
         return redirect(self.get_success_url())
 
