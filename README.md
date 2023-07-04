@@ -16,21 +16,21 @@ $ ~/safelock$ source venv/bin/activate
 
 Install all required libraries from requirements.txt:
 ```
-~/safelock$ pip install -r requirements.txt
+$ ~/safelock$ pip install -r requirements.txt
 ```
 
 Make migrations and migrate:
 ```
-python3 manage.py makemigrations
-python3 manage.py migrate
+$ python3 manage.py makemigrations
+$ python3 manage.py migrate
 ```
 
 Create superuser:
 ```
-python3 manage.py createsuperuser
+$ python3 manage.py createsuperuser
 ```
 
-In he same folder as `settings.py` create a new file `local_settings.py` and fill with your secret key, i.e.:
+In the same folder as `settings.py` is located, create a new file `local_settings.py` and fill with your secret key, i.e.:
 ```
 SECRET_KEY = 'put your secret key here'
 ```
