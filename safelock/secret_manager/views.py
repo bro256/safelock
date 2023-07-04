@@ -119,6 +119,7 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
             entry.encryption_iv = iv
             entry.auth_tag = auth_tag
             entry.save()
+            messages.success(self.request, _('Password entry created successfully!'))
 
             return redirect(self.success_url)
 
@@ -135,7 +136,6 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
-        messages.success(self.request, _('Password entry created successfully!'))
         return super().form_valid(form)
     
     def get_form(self, form_class=None):
@@ -310,6 +310,7 @@ class PasswordEntryUpdateView(UpdateView):
         instance.encryption_iv = iv
         instance.auth_tag = auth_tag
         instance.save()
+        messages.success(self.request, _('Password entry updated successfully!'))
         return redirect(self.get_success_url())
 
 
@@ -323,7 +324,7 @@ class PasswordEntryDeleteView(
     success_url = reverse_lazy('password_entry_list')
 
     def form_valid(self, form):
-        messages.success(self.request, _('Password deleted successfully!'))
+        messages.success(self.request, _('Password entry deleted successfully!'))
         return super().form_valid(form)
 
     def test_func(self) -> bool | None:
@@ -344,6 +345,8 @@ class PasswordEntryToggleTrashView(View):
         # Determine the redirect URL based on the new value
         if password_entry.is_in_trash:
             redirect_url = reverse('password_entry_list')  # Redirect to trash list
+            messages.success(self.request, _('Password entry moved to trash successfully!'))
         else:
             redirect_url = reverse('password_entry_list_trash')
+            messages.success(self.request, _('Password entry restored successfully!'))
         return redirect(redirect_url)
