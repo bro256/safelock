@@ -77,6 +77,15 @@ class PasswordEntryListView(generic.ListView):
         return self.model.objects.filter(owner=self.request.user, is_in_trash=False)
     
 
+class PasswordEntryListTrashView(generic.ListView):
+    model = PasswordEntry
+    # paginate_by = 10
+    template_name = "secret_manager/password_entry_list_trash.html"
+    
+    def get_queryset(self):
+        return self.model.objects.filter(owner=self.request.user, is_in_trash=True)
+
+
 class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
     model = PasswordEntry
     form_class = PasswordEntryForm
@@ -331,5 +340,10 @@ class PasswordEntryToggleTrashView(View):
         # Toggle the is_in_trash value
         password_entry.is_in_trash = not password_entry.is_in_trash
         password_entry.save()
-        return redirect('password_entry_list')
     
+        # Determine the redirect URL based on the new value
+        if password_entry.is_in_trash:
+            redirect_url = reverse('password_entry_list')  # Redirect to trash list
+        else:
+            redirect_url = reverse('password_entry_list_trash')
+        return redirect(redirect_url)
