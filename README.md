@@ -1,5 +1,39 @@
 # SafeLock - Django based secret manager
-My first Python project related to cryptography. The project is still in progress.
+My first Python project related to cryptography.
+
+## About
+SafeLock is password manager designed to help you keep your online accounts safe and easily accessible. The project is still in progress, so please do not use it in real environment yet.
+
+### Installation
+
+Install, create and activate venv:
+```
+$ sudo apt install python3-venv
+$ python3 -m venv safelock/venv
+$ cd safelock/
+$ ~/safelock$ source venv/bin/activate
+```
+
+Install all required libraries from requirements.txt:
+```
+~/safelock$ pip install -r requirements.txt
+```
+
+Make migrations and migrate:
+```
+python3 manage.py makemigrations
+python3 manage.py migrate
+```
+
+Create superuser:
+```
+python3 manage.py createsuperuser
+```
+
+In he same folder as `settings.py` create a new file `local_settings.py` and fill with your secret key, i.e.:
+```
+SECRET_KEY = 'put your secret key here'
+```
 
 ## Cryptography
 
