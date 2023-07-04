@@ -5,10 +5,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.db.models import Q
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.views import generic
+from django.views import generic, View
 from django.views.generic.edit import UpdateView
 from typing import Any, Dict
 
@@ -18,6 +18,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import hashlib
 import os
+
 
 
 def index(request):
@@ -73,7 +74,7 @@ class PasswordEntryListView(generic.ListView):
     template_name = "secret_manager/password_entry_list.html"
     
     def get_queryset(self):
-        return self.model.objects.filter(owner=self.request.user)
+        return self.model.objects.filter(owner=self.request.user, is_in_trash=False)
     
 
 class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
@@ -319,4 +320,16 @@ class PasswordEntryDeleteView(
     def test_func(self) -> bool | None:
         obj = self.get_object()
         return obj.owner == self.request.user
+
+
+    
+class PasswordEntryToggleTrashView(View):
+    def get(self, request, pk):
+        # Retrieve the PasswordEntry object
+        password_entry = get_object_or_404(PasswordEntry, pk=pk)
+
+        # Toggle the is_in_trash value
+        password_entry.is_in_trash = not password_entry.is_in_trash
+        password_entry.save()
+        return redirect('password_entry_list')
     

@@ -7,6 +7,7 @@ urlpatterns = [
     path('password_entry/create/', views.PasswordEntryCreateView.as_view(), name='password_entry_create'),
     path('password_entry/<int:pk>/', views.PasswordEntryDetailView.as_view(), name='password_entry_detail'),
     path('password_entry/update/<int:pk>/', views.PasswordEntryUpdateView.as_view(), name='password_entry_update'),
+    path('password_entry/toggle_to_trash/<int:pk>/', views.PasswordEntryToggleTrashView.as_view(), name='password_entry_to_trash'),
     path('accounts/login/', views.CustomLoginView.as_view(), name='login'),
     path('accounts/password_change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
 
