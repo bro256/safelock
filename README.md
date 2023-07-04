@@ -1,5 +1,5 @@
 # SafeLock - Django based secret manager
-My first Python project related to cryptography.
+My first Python project related to cryptography. The project is still in progress.
 
 ## Cryptography
 
