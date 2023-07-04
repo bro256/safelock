@@ -302,3 +302,21 @@ class PasswordEntryUpdateView(UpdateView):
         instance.save()
         return redirect(self.get_success_url())
 
+
+class PasswordEntryDeleteView(
+    LoginRequiredMixin,
+    UserPassesTestMixin,
+    generic.DeleteView
+):
+    model = PasswordEntry
+    template_name = 'secret_manager/password_entry_delete.html'
+    success_url = reverse_lazy('password_entry_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, _('Password deleted successfully!'))
+        return super().form_valid(form)
+
+    def test_func(self) -> bool | None:
+        obj = self.get_object()
+        return obj.owner == self.request.user
+    
