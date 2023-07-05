@@ -11,12 +11,12 @@ Install, create and activate venv:
 $ sudo apt install python3-venv
 $ python3 -m venv safelock/venv
 $ cd safelock/
-$ ~/safelock$ source venv/bin/activate
+~/safelock$ source venv/bin/activate
 ```
 
 Install all required libraries from requirements.txt:
 ```
-$ ~/safelock$ pip install -r requirements.txt
+~/safelock$ pip install -r requirements.txt
 ```
 
 Make migrations and migrate:

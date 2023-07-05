@@ -340,11 +340,10 @@ class PasswordEntryDeleteView(
         return obj.owner == self.request.user
 
 
-    
 class PasswordEntryToggleTrashView(View):
     def get(self, request, pk):
-        # Retrieve the PasswordEntry object
-        password_entry = get_object_or_404(PasswordEntry, pk=pk)
+        # Retrieve the PasswordEntry object if it belongs to the current user
+        password_entry = get_object_or_404(PasswordEntry, pk=pk, owner=request.user)
 
         # Toggle the is_in_trash value
         password_entry.is_in_trash = not password_entry.is_in_trash
@@ -353,17 +352,18 @@ class PasswordEntryToggleTrashView(View):
         # Determine the redirect URL based on the new value
         if password_entry.is_in_trash:
             redirect_url = reverse('password_entry_list')  # Redirect to trash list
-            messages.success(self.request, _('Password entry moved to trash successfully!'))
+            messages.success(request, _('Password entry moved to trash successfully!'))
         else:
             redirect_url = reverse('password_entry_list_trash')
-            messages.success(self.request, _('Password entry restored successfully!'))
+            messages.success(request, _('Password entry restored successfully!'))
+        
         return redirect(redirect_url)
-    
+
 
 class PasswordEntryToggleBookmarksView(View):
     def get(self, request, pk):
         # Retrieve the PasswordEntry object
-        password_entry = get_object_or_404(PasswordEntry, pk=pk)
+        password_entry = get_object_or_404(PasswordEntry, pk=pk, owner=request.user)
 
         # Toggle the is_in_trash value
         password_entry.is_in_bookmarks = not password_entry.is_in_bookmarks
