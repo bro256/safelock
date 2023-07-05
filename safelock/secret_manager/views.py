@@ -70,7 +70,7 @@ class CustomLoginView(LoginView):
 
 class PasswordEntryListView(generic.ListView):
     model = PasswordEntry
-    # paginate_by = 10
+    paginate_by = 10
     template_name = "secret_manager/password_entry_list.html"
     
     def get_queryset(self):
@@ -79,7 +79,7 @@ class PasswordEntryListView(generic.ListView):
 
 class PasswordEntryListTrashView(generic.ListView):
     model = PasswordEntry
-    # paginate_by = 10
+    paginate_by = 10
     template_name = "secret_manager/password_entry_list_trash.html"
     
     def get_queryset(self):
