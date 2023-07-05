@@ -14,7 +14,7 @@ $ cd safelock/
 ~/safelock$ source venv/bin/activate
 ```
 
-Install all required libraries from requirements.txt:
+Install all required libraries from `requirements.txt`:
 ```
 ~/safelock$ pip install -r requirements.txt
 ```
