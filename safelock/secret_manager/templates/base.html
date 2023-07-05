@@ -8,10 +8,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% trans "SafeLock"|capfirst %}{% endblock title %}</title>
-    {% comment %} {% load bootstrap5 %}
+    {% load bootstrap5 %}
     {% bootstrap_css %}
-    {% bootstrap_javascript %} {% endcomment %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% bootstrap_javascript %}
+    <link rel="stylesheet" href="{% static 'secret_manager/css/style.css' %}">
 </head>
 <body>
 {% if user.is_authenticated %}
