@@ -147,7 +147,7 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
         return self.request.user.is_authenticated
 
 
-class PasswordEntryDetailView(generic.DetailView):
+class PasswordEntryDetailView(UserPassesTestMixin,generic.DetailView):
     model = PasswordEntry
     template_name = "secret_manager/password_entry_detail.html"
 
@@ -184,6 +184,10 @@ class PasswordEntryDetailView(generic.DetailView):
         context['decrypted_password'] = decrypted_password_str
 
         return context
+    
+    def test_func(self):
+        obj = self.get_object()
+        return obj.owner == self.request.user
 
 
 def reencrypt_all_passwords(user, old_password, new_password):
@@ -264,7 +268,7 @@ def decrypt_password(password_entry, derived_key):
     return decrypted_password_str
 
 
-class PasswordEntryUpdateView(UpdateView):
+class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
     model = PasswordEntry
     form_class = PasswordEntryUpdateForm
     template_name = 'secret_manager/password_entry_form.html'
@@ -312,6 +316,10 @@ class PasswordEntryUpdateView(UpdateView):
         instance.save()
         messages.success(self.request, _('Password entry updated successfully!'))
         return redirect(self.get_success_url())
+    
+    def test_func(self):
+        obj = self.get_object()
+        return obj.owner == self.request.user
 
 
 class PasswordEntryDeleteView(
