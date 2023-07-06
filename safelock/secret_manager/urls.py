@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+from .views import generate_password
+
 urlpatterns = [
     path('', views.index, name='index'),
     path('passwords/', views.PasswordEntryListView.as_view(), name='password_entry_list'),
@@ -13,6 +15,10 @@ urlpatterns = [
     path('password_entry/toggle_to_bookmarks/<int:pk>/', views.PasswordEntryToggleBookmarksView.as_view(), name='password_entry_to_bookmarks'),
     path('accounts/login/', views.CustomLoginView.as_view(), name='login'),
     path('accounts/password_change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
+
+
+    path('generate-password/', generate_password, name='generate_password'),
+
 
     # path('secrets/', views.SecretListView.as_view(), name='secret_list'),
 ]

@@ -19,6 +19,9 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import hashlib
 import os
 
+from django.utils.crypto import get_random_string
+from django.http import JsonResponse
+
 
 
 def index(request):
@@ -26,6 +29,11 @@ def index(request):
         'test' : 'test',
     }
     return render(request, 'secret_manager/index.html', context)
+
+
+def generate_password(request):
+    password = get_random_string(length=16)  # Generate a random password
+    return JsonResponse({'password': password})
 
 
 def derive_key(username, password):
