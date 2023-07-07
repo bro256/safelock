@@ -1,3 +1,7 @@
+.basic-form label {
+  font-weight: bold;
+  width: 100%
+}
 .no-underline {
     text-decoration: none;
   }

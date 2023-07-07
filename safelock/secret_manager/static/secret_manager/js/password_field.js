@@ -25,12 +25,57 @@ async function generatePassword() { // Asynchronous function
     console.log("Response received:", data); // Debug
     // Update the password field with the new password
     document.getElementById('password-field').value = data.password; // Update the password field
+    // Calculate and show the password strength
+    showPasswordStrength();
   } catch (error) {
     console.error('Error:', error);
   }
 }
 
+
+function showPasswordStrength() {
+  var passwordInput = document.getElementById("password-field");
+  var strengthIndicator = document.getElementById("password-strength");
+
+  var password = passwordInput.value;
+  var strength = calculatePasswordStrength(password);
+
+  // Update the strength indicator element with the password strength level
+  strengthIndicator.textContent = strength;
+}
+
+function calculatePasswordStrength(password) {
+  var score = 0;
+  if (password.length >= 8) {
+    score += 1;
+  }
+  if (/[a-z]/.test(password)) {
+    score += 1;
+  }
+  if (/[A-Z]/.test(password)) {
+    score += 1;
+  }
+  if (/\d/.test(password)) {
+    score += 1;
+  }
+  if (/[!@#$%^&*()\-_=+[{\]}\\|;:'",<.>/?]/.test(password)) {
+    score += 1;
+  }
+  // Return the password strength level
+  if (score <= 1) {
+    return "Weak";
+  } else if (score <= 3) {
+    return "Medium";
+  } else {
+    return "Strong";
+  }
+}
+
+document.getElementById("password-field").addEventListener("input", showPasswordStrength);
+
 window.addEventListener("DOMContentLoaded", function() {
   // Hide the text field on page load
   document.getElementById("password-field").type = "password";
+  // Show password strength when the page is loaded
+  showPasswordStrength();
 });
