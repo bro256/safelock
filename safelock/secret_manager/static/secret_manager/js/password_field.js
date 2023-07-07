@@ -1,12 +1,11 @@
-
 function copyToClipboard() {
     var textToCopy = document.getElementById("password-field").value;
     navigator.clipboard.writeText(textToCopy)
       .then(function() {
-        alert("Text copied to clipboard!");
+        alert("Password copied to clipboard!");
       })
       .catch(function(error) {
-        console.error("Error copying text to clipboard:", error);
+        console.error("Error copying to clipboard:", error);
       });
   }
 
@@ -14,31 +13,24 @@ function toggleTextVisibility() {
   var textField = document.getElementById("password-field");
   textField.type = textField.type === "password" ? "text" : "password";
 }
-function regeneratePassword() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', '/generate-password/', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
 
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      var response = JSON.parse(xhr.responseText);
-      // Update the password field with the new password
-      document.getElementById('password-field').value = response.password;
-    }
-    else {
-      console.error('Error:', xhr.status);
-    }
-  };
+async function generatePassword() { // Asynchronous function
+  console.log("Generate Password button clicked"); // Debug
 
-  xhr.onerror = function() {
-    console.error('Request failed.');
-  };
-
-  xhr.send();
+  try {
+    // Await keyword is used to wait for the fetch() function to complete and return the response
+    const response = await fetch('/generate-password/');
+    // Wait for the response.json() method to parse the response body as JSON
+    const data = await response.json();
+    console.log("Response received:", data); // Debug
+    // Update the password field with the new password
+    document.getElementById('password-field').value = data.password; // Update the password field
+  } catch (error) {
+    console.error('Error:', error);
+  }
 }
 
 window.addEventListener("DOMContentLoaded", function() {
   // Hide the text field on page load
   document.getElementById("password-field").type = "password";
 });
-

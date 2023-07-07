@@ -20,7 +20,10 @@ import hashlib
 import os
 
 from django.utils.crypto import get_random_string
-from django.http import JsonResponse
+
+from django.http import HttpRequest, JsonResponse
+import random
+import string
 
 
 
@@ -31,8 +34,17 @@ def index(request):
     return render(request, 'secret_manager/index.html', context)
 
 
-def generate_password(request):
-    password = get_random_string(length=16)  # Generate a random password
+# def generate_password(request):
+#     password = get_random_string(length=16)  # Generate a random password
+#     return JsonResponse({'password': password})
+
+def generate_password(request: HttpRequest, length: int = 16, symbols: bool = False) -> JsonResponse:
+    characters = string.ascii_letters + string.digits
+    if symbols:
+        characters += string.punctuation
+
+    password = ''.join(random.choice(characters) for _ in range(length))  # Generate the random password
+
     return JsonResponse({'password': password})
 
 
