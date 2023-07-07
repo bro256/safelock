@@ -16,7 +16,7 @@
 {% endif %}
 <p><button type="submit">Log in</button></p>
 </form>
-<p><a href="{% url 'password_reset' %}">Forgot password?</a></p>
-{% comment %} <p>If you do not have an account, please <a href="{% url 'signup' %}">sign up</a>. {% endcomment %}
+{% comment %} <p><a href="{% url 'password_reset' %}">Forgot password?</a></p> {% endcomment %}
+<p>If you do not have an account, please <a href="{% url 'signup' %}">sign up</a>.
 {% endblock content %}
 

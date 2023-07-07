@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Sign up for SafeLock{% endblock title %}
+{% block content %}
+<h1>Sign up for SafeLock</h1>
+<form action="{{ request.path }}" method="post">
+    {% csrf_token %}
+    <div class="basic-form">
+        <p>
+            <label for="first_name">First Name</label>
+            <input type="text" name="first_name" value="{{ request.POST.first_name }}">
+        </p>
+        <p>
+            <label for="last_name">Last Name</label>
+            <input type="text" name="last_name" value="{{ request.POST.last_name }}">
+        </p>
+        <p>
+            <label for="username">Username</label>
+            <input type="text" name="username" required value="{{ request.POST.username }}">
+            <br><small>Case sensitive, must be unique.</small>
+        </p>
+        <p>
+            <label for="email">E-mail</label>
+            <input type="email" name="email" required value="{{ request.POST.email }}">
+        </p>
+        <p>
+            <label for="password">Password</label>
+            <input type="password" name="password" required>
+        </p>
+        <p>
+            <label for="password_confirm">Confirm Password</label>
+            <input type="password" name="password_confirm" required>
+        </p>
+        <p><button type="submit">Confirm Sign Up</button></p>
+        <p>If you have already an account, you can <a href="{% url 'login' %}">login</a> instead.</p>
+    </div>
+</form>
+{% endblock content %}
