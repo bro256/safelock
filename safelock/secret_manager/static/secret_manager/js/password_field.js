@@ -99,3 +99,10 @@ window.addEventListener("DOMContentLoaded", function() {
   // Show password strength when the page is loaded
   showPasswordStrength();
 });
+
+document.getElementById('generate-button').addEventListener('click', function() {
+  const length = document.getElementById('length').value;
+  const includeSymbols = document.getElementById('symbols').checked;
+
+  generatePassword(length, includeSymbols);
+});
