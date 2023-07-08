@@ -18,6 +18,7 @@ urlpatterns = [
 
 
     path('generate-password/', generate_password, name='generate_password'),
+    path('password_generator/', views.GeneratePasswordView.as_view(), name='password_generator'),
 
 
     # path('secrets/', views.SecretListView.as_view(), name='secret_list'),

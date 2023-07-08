@@ -38,12 +38,24 @@ def index(request):
 #     password = get_random_string(length=16)  # Generate a random password
 #     return JsonResponse({'password': password})
 
-def generate_password(request: HttpRequest, length: int = 16, symbols: bool = False) -> JsonResponse:
+# def generate_password(request: HttpRequest, length: int = 16, symbols: bool = True) -> JsonResponse:
+#     characters = string.ascii_letters + string.digits
+#     if symbols:
+#         characters += string.punctuation
+
+#     password = ''.join(random.choice(characters) for _ in range(length))  # Generate the random password
+
+#     return JsonResponse({'password': password})
+
+def generate_password(request: HttpRequest) -> JsonResponse:
+    length = int(request.GET.get('length', 16))
+    symbols = bool(request.GET.get('symbols', True))
+
     characters = string.ascii_letters + string.digits
     if symbols:
         characters += string.punctuation
 
-    password = ''.join(random.choice(characters) for _ in range(length))  # Generate the random password
+    password = ''.join(random.choice(characters) for _ in range(length))
 
     return JsonResponse({'password': password})
 
@@ -396,3 +408,24 @@ class PasswordEntryToggleBookmarksView(View):
         else:
             messages.success(self.request, _('Password entry removed from Bookmarks successfully!'))
         return redirect(redirect_url)
+    
+
+class GeneratePasswordView(View):
+    template_name = 'secret_manager/password_generator.html'
+
+    def generate_password(self, length=16, symbols=False):
+        characters = string.ascii_letters + string.digits
+        if symbols:
+            characters += string.punctuation
+
+        password = ''.join(random.choice(characters) for _ in range(length))
+        return password
+
+    def get(self, request):
+        length = int(request.GET.get('length', 16))
+        symbols = bool(request.GET.get('symbols', False))
+
+        password = self.generate_password(length, symbols)
+
+        return render(request, self.template_name, {'password': password})
+    
