@@ -32,7 +32,7 @@ function toggleTextVisibility() {
 //   }
 // }
 
-async function generatePassword(length = 3, includeSymbols = False) { // Asynchronous function
+async function generatePassword(length = 16, includeSymbols = true) { // Asynchronous function
   console.log("Generate Password button clicked"); // Debug
 
   try {
