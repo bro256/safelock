@@ -32,22 +32,47 @@ function toggleTextVisibility() {
 //   }
 // }
 
-async function generatePassword(length = 16, includeSymbols = true) { // Asynchronous function
+// async function generatePassword(length = 16, includeSymbols = true) { // Asynchronous function
+//   console.log("Generate Password button clicked"); // Debug
+
+//   try {
+//     // Await keyword is used to wait for the fetch() function to complete and return the response
+//     const url = `/generate-password/?length=${encodeURIComponent(length)}&symbols=${encodeURIComponent(includeSymbols)}`;
+//     const response = await fetch(url);
+//     // Wait for the response.json() method to parse the response body as JSON
+//     const data = await response.json()
+//     console.log("Response received:", data); // Debug
+//     // Update the password field with the new password
+//     const generatedPassword = data.password;
+//     // Calculate and show the password strength
+//     showPasswordStrength();
+
+//     document.getElementById('password-field').value = generatedPassword; // Update the password field
+//     // Calculate and show the password strength
+//     showPasswordStrength();
+//   } catch (error) {
+//     console.error('Error:', error);
+//   }
+// }
+
+async function generatePassword(length = 16, letters = true, numbers = true, symbols = true) {
   console.log("Generate Password button clicked"); // Debug
 
   try {
-    // Await keyword is used to wait for the fetch() function to complete and return the response
-    const url = `/generate-password/?length=${encodeURIComponent(length)}&symbols=${encodeURIComponent(includeSymbols)}`;
+    // Prepare the URL with query parameters for the server endpoint
+    const url = `/generate-password/?length=${encodeURIComponent(length)}&letters=${encodeURIComponent(letters)}&numbers=${encodeURIComponent(numbers)}&symbols=${encodeURIComponent(symbols)}`;
+
+    // Send a GET request to the server endpoint
     const response = await fetch(url);
-    // Wait for the response.json() method to parse the response body as JSON
-    const data = await response.json()
+
+    // Parse the response body as JSON
+    const data = await response.json();
     console.log("Response received:", data); // Debug
+
     // Update the password field with the new password
     const generatedPassword = data.password;
-    // Calculate and show the password strength
-    showPasswordStrength();
+    document.getElementById('password-field').value = generatedPassword;
 
-    document.getElementById('password-field').value = generatedPassword; // Update the password field
     // Calculate and show the password strength
     showPasswordStrength();
   } catch (error) {
@@ -105,7 +130,9 @@ window.addEventListener("DOMContentLoaded", function() {
 
 document.getElementById('generate-button').addEventListener('click', function() {
   const length = document.getElementById('length').value;
-  const includeSymbols = document.getElementById('symbols').checked;
+  const letters = true;
+  const numbers = document.getElementById('numbers').checked;
+  const symbols = document.getElementById('symbols').checked;
 
-  generatePassword(length, includeSymbols);
+  generatePassword(length, letters, numbers, symbols);
 });

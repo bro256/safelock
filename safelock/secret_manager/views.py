@@ -47,11 +47,29 @@ def index(request):
 
 #     return JsonResponse({'password': password})
 
+# def generate_password(request: HttpRequest) -> JsonResponse:
+#     length = int(request.GET.get('length', 16))
+#     symbols = request.GET.get('symbols', 'true').lower() == 'true'
+
+#     characters = string.ascii_letters + string.digits
+#     if symbols:
+#         characters += string.punctuation
+
+#     password = ''.join(random.choice(characters) for _ in range(length))
+
+#     return JsonResponse({'password': password})
+
 def generate_password(request: HttpRequest) -> JsonResponse:
     length = int(request.GET.get('length', 16))
+    letters = request.GET.get('letters', 'true').lower() == 'true'
+    numbers = request.GET.get('numbers', 'true').lower() == 'true'
     symbols = request.GET.get('symbols', 'true').lower() == 'true'
 
-    characters = string.ascii_letters + string.digits
+    characters = ''
+    if letters:
+        characters += string.ascii_letters
+    if numbers:
+        characters += string.digits
     if symbols:
         characters += string.punctuation
 
@@ -410,11 +428,35 @@ class PasswordEntryToggleBookmarksView(View):
         return redirect(redirect_url)
     
 
+# class GeneratePasswordView(View):
+#     template_name = 'secret_manager/password_generator.html'
+
+#     def generate_password(self, length=16, symbols=False):
+#         characters = string.ascii_letters + string.digits
+#         if symbols:
+#             characters += string.punctuation
+
+#         password = ''.join(random.choice(characters) for _ in range(length))
+#         return password
+
+#     def get(self, request):
+#         length = int(request.GET.get('length', 16))
+#         symbols = bool(request.GET.get('symbols', False))
+
+#         password = self.generate_password(length, symbols)
+
+#         return render(request, self.template_name, {'password': password})
+    
+
 class GeneratePasswordView(View):
     template_name = 'secret_manager/password_generator.html'
 
-    def generate_password(self, length=16, symbols=False):
-        characters = string.ascii_letters + string.digits
+    def generate_password(self, length=16, letters=True, numbers=True, symbols=False):
+        characters = ''
+        if letters:
+            characters += string.ascii_letters
+        if numbers:
+            characters += string.digits
         if symbols:
             characters += string.punctuation
 
@@ -423,9 +465,10 @@ class GeneratePasswordView(View):
 
     def get(self, request):
         length = int(request.GET.get('length', 16))
+        letters = bool(request.GET.get('letters', True))
+        numbers = bool(request.GET.get('numbers', True))
         symbols = bool(request.GET.get('symbols', False))
 
-        password = self.generate_password(length, symbols)
+        password = self.generate_password(length, letters, numbers, symbols)
 
         return render(request, self.template_name, {'password': password})
-    
