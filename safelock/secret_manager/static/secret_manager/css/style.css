@@ -8,4 +8,7 @@
 .no-underline-links a {
     text-decoration: none;
   }
-  
+.password-details {
+    max-width: 900px; /* Set the maximum width of the columns */
+    margin: 0 auto; /* Center the columns horizontally */
+}

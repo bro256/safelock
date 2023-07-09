@@ -32,17 +32,20 @@ function toggleTextVisibility() {
 //   }
 // }
 
-async function generatePassword(length = 3, includeSymbols = false) { // Asynchronous function
+async function generatePassword(length = 3, includeSymbols = False) { // Asynchronous function
   console.log("Generate Password button clicked"); // Debug
 
   try {
     // Await keyword is used to wait for the fetch() function to complete and return the response
-    const url = `/generate-password/?length=${encodeURIComponent(length)}&symbols=${includeSymbols}`;
+    const url = `/generate-password/?length=${encodeURIComponent(length)}&symbols=${encodeURIComponent(includeSymbols)}`;
     const response = await fetch(url);
+    // Wait for the response.json() method to parse the response body as JSON
     const data = await response.json()
     console.log("Response received:", data); // Debug
     // Update the password field with the new password
     const generatedPassword = data.password;
+    // Calculate and show the password strength
+    showPasswordStrength();
 
     document.getElementById('password-field').value = generatedPassword; // Update the password field
     // Calculate and show the password strength

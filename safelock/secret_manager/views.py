@@ -49,7 +49,7 @@ def index(request):
 
 def generate_password(request: HttpRequest) -> JsonResponse:
     length = int(request.GET.get('length', 16))
-    symbols = bool(request.GET.get('symbols', True))
+    symbols = request.GET.get('symbols', 'true').lower() == 'true'
 
     characters = string.ascii_letters + string.digits
     if symbols:
