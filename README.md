@@ -42,7 +42,7 @@ SECRET_KEY = 'put your secret key here'
 
 ### Key derivation function
 - PBKDF2
-- Iterations: 100 000
+- Iterations: 600 000
 - Salt: 128 bits
 - Key length: 256 bits
 - Implemented in accordance with official [Cryptography library KDF documentation](https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/)

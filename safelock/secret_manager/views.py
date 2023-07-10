@@ -84,7 +84,7 @@ def derive_key(username, password):
 
     # PBKDF2 parameters
     salt = username_hash[:16]  # Extract the first 16 bytes (128 bits) as the salt
-    iterations = 100000
+    iterations = 600000
     key_length = 32
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
