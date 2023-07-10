@@ -113,7 +113,7 @@ function calculatePasswordStrength(password) {
   if (score <= 1) {
     return "Weak";
   } else if (score <= 3) {
-    return "Medium";
+    return "Moderate";
   } else {
     return "Strong";
   }

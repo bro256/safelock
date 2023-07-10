@@ -379,7 +379,7 @@ class PasswordEntryDeleteView(
 ):
     model = PasswordEntry
     template_name = 'secret_manager/password_entry_delete.html'
-    success_url = reverse_lazy('password_entry_list')
+    success_url = reverse_lazy('password_entry_list_trash')
 
     def form_valid(self, form):
         messages.success(self.request, _('Password entry deleted successfully!'))
@@ -388,6 +388,15 @@ class PasswordEntryDeleteView(
     def test_func(self) -> bool | None:
         obj = self.get_object()
         return obj.owner == self.request.user
+    
+
+class PasswordEntriesDelete(View):
+    def post(self, request):
+        user = request.user
+        PasswordEntry.objects.filter(owner=user, is_in_trash=True).delete()
+
+        messages.success(request, "Password entries deleted successfully!")
+        return redirect('password_entry_list_trash')
 
 
 class PasswordEntryToggleTrashView(View):
