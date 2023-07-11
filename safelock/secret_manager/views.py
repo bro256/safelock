@@ -9,7 +9,7 @@ from django.shortcuts import redirect, render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views import generic, View
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView, DeleteView
 from typing import Any, Dict
 
 # from cryptography.hazmat.backends import default_backend
@@ -372,11 +372,7 @@ class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
         return obj.owner == self.request.user
 
 
-class PasswordEntryDeleteView(
-    LoginRequiredMixin,
-    UserPassesTestMixin,
-    generic.DeleteView
-):
+class PasswordEntryDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = PasswordEntry
     template_name = 'secret_manager/password_entry_delete.html'
     success_url = reverse_lazy('password_entry_list_trash')
@@ -384,13 +380,15 @@ class PasswordEntryDeleteView(
     def form_valid(self, form):
         messages.success(self.request, _('Password entry deleted successfully!'))
         return super().form_valid(form)
-
-    def test_func(self) -> bool | None:
-        obj = self.get_object()
-        return obj.owner == self.request.user
     
+    def test_func(self):
+        return self.request.user == self.get_object().owner
+
 
 class PasswordEntriesDelete(View):
+    def get(self, request):
+        return render(request, 'secret_manager/password_entries_delete.html')
+    
     def post(self, request):
         user = request.user
         PasswordEntry.objects.filter(owner=user, is_in_trash=True).delete()
