@@ -111,7 +111,7 @@ function calculatePasswordStrength(password) {
   }
   // Return the password strength level
   if (score == 0) {
-    return "";
+    return "None";
   } else if (score == 1) {
     return "Weak";
   } else if (score <= 3) {
