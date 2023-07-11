@@ -29,7 +29,7 @@
                         {% endif %}
                     </div>
                     <div class="navbar-nav ms-auto">
-                        <div class="align-self-center">You are logged in as: <strong>{{ user.username }}</strong></div>
+                        <div class="align-self-center">You are logged in as: <strong><a href="{% url 'profile' %}"> {{ user.username }}</a></strong></div>
                         <a class="nav-link" href="{% url 'logout' %}">{% trans "logout"|capfirst %}</a>
                     </div>
                 </div> 
@@ -55,10 +55,8 @@
     </div>
 </main>
     <div class="row">
-        <footer>
-            <div class="row">   
-                <p>&copy; SafeLock. PTU12. 2023
-            </div>
+        <footer> 
+            <p>&copy; SafeLock. PTU12. 2023</p>
         </footer>
     </div>
 </body>

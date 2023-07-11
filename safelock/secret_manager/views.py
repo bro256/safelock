@@ -433,27 +433,7 @@ class PasswordEntryToggleBookmarksView(View):
         else:
             messages.success(self.request, _('Password entry removed from Bookmarks successfully!'))
         return redirect(redirect_url)
-    
-
-# class GeneratePasswordView(View):
-#     template_name = 'secret_manager/password_generator.html'
-
-#     def generate_password(self, length=16, symbols=False):
-#         characters = string.ascii_letters + string.digits
-#         if symbols:
-#             characters += string.punctuation
-
-#         password = ''.join(random.choice(characters) for _ in range(length))
-#         return password
-
-#     def get(self, request):
-#         length = int(request.GET.get('length', 16))
-#         symbols = bool(request.GET.get('symbols', False))
-
-#         password = self.generate_password(length, symbols)
-
-#         return render(request, self.template_name, {'password': password})
-    
+       
 
 class GeneratePasswordView(View):
     template_name = 'secret_manager/password_generator.html'
@@ -479,3 +459,4 @@ class GeneratePasswordView(View):
         password = self.generate_password(length, letters, numbers, symbols)
 
         return render(request, self.template_name, {'password': password})
+

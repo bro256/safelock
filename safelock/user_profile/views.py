@@ -3,6 +3,9 @@ from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_protect
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+
 User = get_user_model()
 
 # @csrf_protect
@@ -39,3 +42,14 @@ def signup(request):
             messages.success(request, "User registration successful!")
             return redirect('login')
     return render(request, 'user_profile/signup.html')
+
+
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'user_profile/profile.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+    
