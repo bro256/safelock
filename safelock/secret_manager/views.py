@@ -290,6 +290,7 @@ class CustomPasswordChangeView(PasswordChangeView):
         
         # Log out the user to get new PBKDF2 derived key
         logout(self.request)
+        messages.success(self.request, _('Password changed successfuly!'))
 
         return response
 

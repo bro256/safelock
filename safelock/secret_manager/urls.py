@@ -15,7 +15,7 @@ urlpatterns = [
     path('password_entry/toggle_trash/<int:pk>/', views.PasswordEntryToggleTrashView.as_view(), name='password_entry_toggle_trash'),
     path('password_entry/toggle_to_bookmarks/<int:pk>/', views.PasswordEntryToggleBookmarksView.as_view(), name='password_entry_to_bookmarks'),
     path('accounts/login/', views.CustomLoginView.as_view(), name='login'),
-    path('accounts/password_change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
+    path('accounts/password_change/', views.CustomPasswordChangeView.as_view(template_name='registration/password_change.html'), name='password_change'),
 
 
     path('generate-password/', generate_password, name='generate_password'),
