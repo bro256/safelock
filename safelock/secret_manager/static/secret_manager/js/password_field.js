@@ -94,7 +94,7 @@ function showPasswordStrength() {
 
 function calculatePasswordStrength(password) {
   var score = 0;
-  if (password.length >= 8) {
+  if (password.length >= 12) {
     score += 1;
   }
   if (/[a-z]/.test(password)) {
@@ -110,7 +110,9 @@ function calculatePasswordStrength(password) {
     score += 1;
   }
   // Return the password strength level
-  if (score <= 1) {
+  if (score == 0) {
+    return "";
+  } else if (score == 1) {
     return "Weak";
   } else if (score <= 3) {
     return "Moderate";

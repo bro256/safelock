@@ -29,7 +29,7 @@ class PasswordEntry(models.Model):
     is_in_trash = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['-is_in_bookmarks', 'website']
+        ordering = ['website', '-is_in_bookmarks', 'title']
         verbose_name = _("password entry")
         verbose_name_plural = _("password entries")
 
