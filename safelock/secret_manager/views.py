@@ -137,12 +137,12 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
             auth_tag = encryptor.tag
 
             # Save the encrypted password, IV, and tag to the model instance
-            entry = form.save(commit=False)
-            entry.owner = request.user
-            entry.encrypted_password = ciphertext
-            entry.encryption_iv = iv
-            entry.auth_tag = auth_tag
-            entry.save()
+            instance = form.save(commit=False)
+            instance.owner = request.user
+            instance.encrypted_password = ciphertext
+            instance.encryption_iv = iv
+            instance.auth_tag = auth_tag
+            instance.save()
             messages.success(self.request, _('Password entry created successfully!'))
 
             return redirect(self.success_url)
@@ -180,15 +180,18 @@ class PasswordEntryDetailView(UserPassesTestMixin,generic.DetailView):
 
         # Retrieve the derived key from the session
         derived_key_in_hex = self.request.session.get('derived_key')
-        derived_key = bytes.fromhex(derived_key_in_hex)
+        # derived_key = bytes.fromhex(derived_key_in_hex)
 
         # Retrieve the current PasswordEntry object
         password_entry = self.get_object()
 
         # Call the decrypt_password function to decrypt the password
-        decrypted_password_str = decrypt_password(password_entry, derived_key)
+        decrypted_password_byte_string = decrypt_password(password_entry, derived_key_in_hex)
 
-        context['decrypted_password'] = decrypted_password_str
+        # Convert the decrypted password to a string
+        decrypted_password = decrypted_password_byte_string.decode('utf-8')
+
+        context['decrypted_password'] = decrypted_password
 
         return context
     
@@ -197,43 +200,43 @@ class PasswordEntryDetailView(UserPassesTestMixin,generic.DetailView):
         return obj.owner == self.request.user
 
 
-def reencrypt_all_passwords(user, old_password, new_password):
-    # Derive the old and new keys
-    old_key = derive_key(user.username, old_password)
-    new_key = derive_key(user.username, new_password)
+# def reencrypt_all_passwords(user, old_password, new_password):
+#     # Derive the old and new keys
+#     old_key = derive_key(user.username, old_password)
+#     new_key = derive_key(user.username, new_password)
 
-    ### FOR DEBUG ONLY!!!
-    #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
+#     ### FOR DEBUG ONLY!!!
+#     #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
 
-    # Retrieve all the encrypted passwords associated with the user
-    entries = PasswordEntry.objects.filter(owner=user)
+#     # Retrieve all the encrypted passwords associated with the user
+#     password_entries = PasswordEntry.objects.filter(owner=user)
 
-    # Iterate over each entry and re-encrypt the password
-    for entry in entries:
-        # Decrypt the password using the old key and IV
-        cipher = Cipher(algorithms.AES(bytes.fromhex(old_key)), modes.GCM(entry.encryption_iv, entry.auth_tag))
-        decryptor = cipher.decryptor()
-        decrypted_password = decryptor.update(entry.encrypted_password) + decryptor.finalize()
-        decrypted_password_str = decrypted_password.decode('utf-8')
-
-        ### FOR DEBUG ONLY!!!
-        #print(f"DECRYPTION. ID: Encrypted pass: {entry.encrypted_password} iv: {entry.encryption_iv} tag: {entry.auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
-
-        # Encrypt the decrypted password using the new key and IV
-        iv = os.urandom(12)
-        cipher = Cipher(algorithms.AES(bytes.fromhex(new_key)), modes.GCM(iv))
-        encryptor = cipher.encryptor()
-        encrypted_password = encryptor.update(decrypted_password) + encryptor.finalize()
-        auth_tag = encryptor.tag
+#     # Iterate over each entry and re-encrypt the password
+#     for password_entry in password_entries:
+#         # Decrypt the password using the old key and IV
+#         cipher = Cipher(algorithms.AES(bytes.fromhex(old_key)), modes.GCM(password_entry.encryption_iv, password_entry.auth_tag))
+#         decryptor = cipher.decryptor()
+#         decrypted_password = decryptor.update(password_entry.encrypted_password) + decryptor.finalize()
         
-        ### FOR DEBUG ONLY!!!
-        #print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
+#         ### FOR DEBUG ONLY!!!
+#         #decrypted_password_str = decrypted_password.decode('utf-8')
+#         #print(f"DECRYPTION. ID: Encrypted pass: {password_entry.encrypted_password} iv: {password_entry.encryption_iv} tag: {password_entry.auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
 
-        # Update the entry with the new encrypted password and IV
-        entry.encrypted_password = encrypted_password
-        entry.encryption_iv = iv
-        entry.auth_tag = auth_tag
-        entry.save()
+#         # Encrypt the decrypted password using the new key and IV
+#         iv = os.urandom(12)
+#         cipher = Cipher(algorithms.AES(bytes.fromhex(new_key)), modes.GCM(iv))
+#         encryptor = cipher.encryptor()
+#         encrypted_password = encryptor.update(decrypted_password) + encryptor.finalize()
+#         auth_tag = encryptor.tag
+        
+#         ### FOR DEBUG ONLY!!!
+#         #print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
+
+#         # Update the entry with the new encrypted password and IV
+#         password_entry.encrypted_password = encrypted_password
+#         password_entry.encryption_iv = iv
+#         password_entry.auth_tag = auth_tag
+#         password_entry.save()
 
     
 class CustomPasswordChangeView(PasswordChangeView):
@@ -255,25 +258,25 @@ class CustomPasswordChangeView(PasswordChangeView):
         return self.success_url
 
 
-def decrypt_password(password_entry, derived_key):
-    # Retrieve the encrypted password, IV, and tag from the model instance
-    encrypted_password = password_entry.encrypted_password
-    iv = password_entry.encryption_iv
-    tag = password_entry.auth_tag
+# def decrypt_password(password_entry, derived_key):
+#     # Retrieve the encrypted password, IV, and tag from the model instance
+#     encrypted_password = password_entry.encrypted_password
+#     iv = password_entry.encryption_iv
+#     tag = password_entry.auth_tag
 
-    # Create the AES-GCM cipher with the derived key, IV, and tag
-    decryptor = Cipher(
-        algorithms.AES(derived_key),
-        modes.GCM(iv, tag),
-    ).decryptor()
+#     # Create the AES-GCM cipher with the derived key, IV, and tag
+#     decryptor = Cipher(
+#         algorithms.AES(derived_key),
+#         modes.GCM(iv, tag),
+#     ).decryptor()
 
-    # Decrypt the password
-    decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
+#     # Decrypt the password
+#     decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
 
-    # Convert the decrypted password to a string
-    decrypted_password_str = decrypted_password.decode('utf-8')
+#     # Convert the decrypted password to a string
+#     decrypted_password_str = decrypted_password.decode('utf-8')
 
-    return decrypted_password_str
+#     return decrypted_password_str
 
 
 class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
@@ -287,15 +290,18 @@ class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
 
         # Retrieve the derived key from the session
         derived_key_in_hex = self.request.session.get('derived_key')
-        derived_key = bytes.fromhex(derived_key_in_hex)
-        decrypted_value = decrypt_password(self.object, derived_key)
+        # derived_key = bytes.fromhex(derived_key_in_hex)
+        decrypted_password_byte_string = decrypt_password(self.object, derived_key_in_hex)
+        
+        # Convert the decrypted password to a string
+        decrypted_password = decrypted_password_byte_string.decode('utf-8')
 
         # Add the decrypted password to the context
-        context['password'] = decrypted_value
+        context['password'] = decrypted_password
         print(context)
 
         # Set the decrypted password value in the form field initial data
-        context['form'].initial['password'] = decrypted_value
+        context['form'].initial['password'] = decrypted_password
 
         return context
 
@@ -417,3 +423,48 @@ class GeneratePasswordView(View):
         password = self.generate_password(length, letters, numbers, symbols)
 
         return render(request, self.template_name, {'password': password})
+
+
+
+
+def reencrypt_all_passwords(user, old_password, new_password):
+    # Derive the old and new keys
+    old_key = derive_key(user.username, old_password)
+    new_key = derive_key(user.username, new_password)
+    password_entries = PasswordEntry.objects.filter(owner=user)
+    
+    ### FOR DEBUG ONLY!!!
+    #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
+
+    for password_entry in password_entries:
+        decrypted_password = decrypt_password(password_entry, old_key)
+        encrypted_password, iv, auth_tag = encrypt_password(decrypted_password, new_key)
+        
+        password_entry.encrypted_password = encrypted_password
+        password_entry.encryption_iv = iv
+        password_entry.auth_tag = auth_tag
+        password_entry.save()
+
+def decrypt_password(password_entry, key):
+    cipher = Cipher(algorithms.AES(bytes.fromhex(key)), modes.GCM(password_entry.encryption_iv, password_entry.auth_tag))
+    decryptor = cipher.decryptor()
+    decrypted_password = decryptor.update(password_entry.encrypted_password) + decryptor.finalize()
+    
+    ### FOR DEBUG ONLY!!!
+    #decrypted_password_str = decrypted_password.decode('utf-8')
+    #print(f"DECRYPTION. ID: Encrypted pass: {password_entry.encrypted_password} iv: {password_entry.encryption_iv} tag: {password_entry.auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}")
+    
+    return decrypted_password
+
+def encrypt_password(decrypted_password, key):
+    iv = os.urandom(12)
+    cipher = Cipher(algorithms.AES(bytes.fromhex(key)), modes.GCM(iv))
+    encryptor = cipher.encryptor()
+    encrypted_password = encryptor.update(decrypted_password) + encryptor.finalize()
+    auth_tag = encryptor.tag
+    
+    ### FOR DEBUG ONLY!!!
+    #print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
+    
+    return encrypted_password, iv, auth_tag
+    
