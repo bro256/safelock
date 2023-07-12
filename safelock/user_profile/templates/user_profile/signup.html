@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Sign up for SafeLock{% endblock title %}
 {% block content %}
-<h1>Sign up for SafeLock</h1>
+<h1 class="mb-3">Sign up for SafeLock</h1>
 <form action="{{ request.path }}" method="post">
     {% csrf_token %}
     <div class="basic-form">
