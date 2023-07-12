@@ -26,38 +26,12 @@ import random
 import string
 
 
-
 def index(request):
     context = {
         'test' : 'test',
     }
     return render(request, 'secret_manager/index.html', context)
 
-
-# def generate_password(request):
-#     password = get_random_string(length=16)  # Generate a random password
-#     return JsonResponse({'password': password})
-
-# def generate_password(request: HttpRequest, length: int = 16, symbols: bool = True) -> JsonResponse:
-#     characters = string.ascii_letters + string.digits
-#     if symbols:
-#         characters += string.punctuation
-
-#     password = ''.join(random.choice(characters) for _ in range(length))  # Generate the random password
-
-#     return JsonResponse({'password': password})
-
-# def generate_password(request: HttpRequest) -> JsonResponse:
-#     length = int(request.GET.get('length', 16))
-#     symbols = request.GET.get('symbols', 'true').lower() == 'true'
-
-#     characters = string.ascii_letters + string.digits
-#     if symbols:
-#         characters += string.punctuation
-
-#     password = ''.join(random.choice(characters) for _ in range(length))
-
-#     return JsonResponse({'password': password})
 
 def generate_password(request: HttpRequest) -> JsonResponse:
     length = int(request.GET.get('length', 16))
@@ -85,7 +59,7 @@ def derive_key(username, password):
     # PBKDF2 parameters
     salt = username_hash[:16]  # Extract the first 16 bytes (128 bits) as the salt
     iterations = 600000
-    key_length = 32
+    key_length = 32 # bytes (256 bits)
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=key_length,
@@ -97,7 +71,7 @@ def derive_key(username, password):
     derived_key = kdf.derive(password.encode('utf-8'))
 
     ### FOR DEBUG ONLY!!!
-    print(f"KEY DERIVATION FUNCTION. Username: {username} Pass:{password} Salt: {salt} Derived key: {derived_key} Derived key in HEX (return): {derived_key.hex()}")
+    # print(f"KEY DERIVATION FUNCTION. Username: {username} Pass:{password} Salt: {salt} Derived key: {derived_key} Derived key in HEX (return): {derived_key.hex()}")
 
     return derived_key.hex()
 
@@ -127,10 +101,10 @@ class PasswordEntryListView(generic.ListView):
         return self.model.objects.filter(owner=self.request.user, is_in_trash=False)
     
 
-class PasswordEntryListTrashView(generic.ListView):
+class PasswordEntryTrashListView(generic.ListView):
     model = PasswordEntry
     paginate_by = 10
-    template_name = "secret_manager/password_entry_list_trash.html"
+    template_name = "secret_manager/password_entry_trash_list.html"
     
     def get_queryset(self):
         return self.model.objects.filter(owner=self.request.user, is_in_trash=True)
@@ -204,26 +178,9 @@ class PasswordEntryDetailView(UserPassesTestMixin,generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # # Retrieve the encrypted password, IV, and tag from the model instance
-        # encrypted_password = self.object.encrypted_password
-        # iv = self.object.encryption_iv
-        # auth_tag = self.object.auth_tag
-
         # Retrieve the derived key from the session
         derived_key_in_hex = self.request.session.get('derived_key')
         derived_key = bytes.fromhex(derived_key_in_hex)
-
-        # # Create the AES-GCM cipher with the derived key, IV, and tag
-        # cipher = Cipher(algorithms.AES(derived_key), modes.GCM(iv, auth_tag))
-        # decryptor = cipher.decryptor()
-
-        # # Decrypt the password
-        # decrypted_password = decryptor.update(encrypted_password) + decryptor.finalize()
-
-        # # Convert the decrypted password to a string
-        # decrypted_password_str = decrypted_password.decode('utf-8')
-
-        # # Add the decrypted password to the context
 
         # Retrieve the current PasswordEntry object
         password_entry = self.get_object()
@@ -246,7 +203,7 @@ def reencrypt_all_passwords(user, old_password, new_password):
     new_key = derive_key(user.username, new_password)
 
     ### FOR DEBUG ONLY!!!
-    print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
+    #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
 
     # Retrieve all the encrypted passwords associated with the user
     entries = PasswordEntry.objects.filter(owner=user)
@@ -260,7 +217,7 @@ def reencrypt_all_passwords(user, old_password, new_password):
         decrypted_password_str = decrypted_password.decode('utf-8')
 
         ### FOR DEBUG ONLY!!!
-        print(f"DECRYPTION. ID: Encrypted pass: {entry.encrypted_password} iv: {entry.encryption_iv} tag: {entry.auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
+        #print(f"DECRYPTION. ID: Encrypted pass: {entry.encrypted_password} iv: {entry.encryption_iv} tag: {entry.auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
 
         # Encrypt the decrypted password using the new key and IV
         iv = os.urandom(12)
@@ -270,7 +227,7 @@ def reencrypt_all_passwords(user, old_password, new_password):
         auth_tag = encryptor.tag
         
         ### FOR DEBUG ONLY!!!
-        print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
+        #print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
 
         # Update the entry with the new encrypted password and IV
         entry.encrypted_password = encrypted_password
@@ -460,4 +417,3 @@ class GeneratePasswordView(View):
         password = self.generate_password(length, letters, numbers, symbols)
 
         return render(request, self.template_name, {'password': password})
-

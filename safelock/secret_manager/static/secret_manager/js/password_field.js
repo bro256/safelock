@@ -9,7 +9,18 @@ function passwordToClipboard() {
       });
   }
 
-function toggleTextVisibility() {
+  function usernameToClipboard() {
+    var textToCopy = document.getElementById("username-field").value;
+    navigator.clipboard.writeText(textToCopy)
+      .then(function() {
+        alert("Username copied to clipboard!");
+      })
+      .catch(function(error) {
+        console.error("Error copying to clipboard:", error);
+      });
+  }
+
+  function toggleTextVisibility() {
   var textField = document.getElementById("password-field");
   textField.type = textField.type === "password" ? "text" : "password";
 }
