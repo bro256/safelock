@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %} Login to {{ block.super }} {% endblock title %}
+{% block title %} Change User Password {% endblock title %}
 {% block content %}
     <h1>User Profile</h1>
-    <p>Username: {{ user.username }}</p>
-    <p>First name: {{ user.first_name }}</p>
-    <p>Last name: {{ user.last_name }}</p>
-    <p>Email: {{ user.email }}</p>
+    <p class="fs-4">{{ user.first_name }} {{ user.last_name }}</p>
+    <p class="fs-4">Username: {{ user.username }}</p>
+    <p class="fs-5">Email: {{ user.email }}</p>
+    <a class="btn btn-primary" href="{% url 'password_change' %}" role="button">Change Password</a>
 {% endblock content %}
