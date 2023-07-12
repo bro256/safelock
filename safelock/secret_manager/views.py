@@ -123,28 +123,30 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
         if form.is_valid():
-            password = form.cleaned_data['password']
+            password_bytes = form.cleaned_data['password'].encode()
             key_in_hex = self.request.session.get('derived_key')
 
-            result = encrypt_password('my_password')
-            encrypted_password, iv, auth_tag = result
+            # Calling password encryption function
+            encryption_data = encrypt_password(password_bytes, key_in_hex)
 
-            key = bytes.fromhex(key_in_hex)
-            iv = os.urandom(12)
+            encrypted_password, encryption_iv, auth_tag = encryption_data
 
-            # Encrypt the password using AES-GCM mode
-            cipher = Cipher(algorithms.AES(key), modes.GCM(iv))
-            encryptor = cipher.encryptor()
-            ciphertext = encryptor.update(password.encode()) + encryptor.finalize()
+            # key = bytes.fromhex(key_in_hex)
+            # iv = os.urandom(12)
 
-            # Retrieve the authentication tag from the encryptor
-            auth_tag = encryptor.tag
+            # # Encrypt the password using AES-GCM mode
+            # cipher = Cipher(algorithms.AES(key), modes.GCM(iv))
+            # encryptor = cipher.encryptor()
+            # ciphertext = encryptor.update(password.encode()) + encryptor.finalize()
+
+            # # Retrieve the authentication tag from the encryptor
+            # auth_tag = encryptor.tag
 
             # Save the encrypted password, IV, and tag to the model instance
             instance = form.save(commit=False)
             instance.owner = request.user
-            instance.encrypted_password = ciphertext
-            instance.encryption_iv = iv
+            instance.encrypted_password = encrypted_password
+            instance.encryption_iv = encryption_iv
             instance.auth_tag = auth_tag
             instance.save()
             messages.success(self.request, _('Password entry created successfully!'))
@@ -313,23 +315,18 @@ class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
         # Operations before saving
         instance = form.save(commit=False)
         
-        password = form.cleaned_data['password']
+        password_bytes = form.cleaned_data['password'].encode()
         key_in_hex = self.request.session.get('derived_key')
-        key = bytes.fromhex(key_in_hex)
-        iv = os.urandom(12)
+        
+        # Calling password encryption function
+        encryption_data = encrypt_password(password_bytes, key_in_hex)
 
-        # Encrypt the password using AES-GCM mode
-        cipher = Cipher(algorithms.AES(key), modes.GCM(iv))
-        encryptor = cipher.encryptor()
-        ciphertext = encryptor.update(password.encode()) + encryptor.finalize()
-
-        # Retrieve the authentication tag from the encryptor
-        auth_tag = encryptor.tag
+        encrypted_password, encryption_iv, auth_tag = encryption_data
 
         # Save the encrypted password, IV, and tag to the model instance
         instance = form.save(commit=False)
-        instance.encrypted_password = ciphertext
-        instance.encryption_iv = iv
+        instance.encrypted_password = encrypted_password
+        instance.encryption_iv = encryption_iv
         instance.auth_tag = auth_tag
         instance.save()
         messages.success(self.request, _('Password entry updated successfully!'))
@@ -441,8 +438,8 @@ def reencrypt_all_passwords(user, old_password, new_password):
     #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
 
     for password_entry in password_entries:
-        decrypted_password = decrypt_password(password_entry, old_key)
-        encrypted_password, iv, auth_tag = encrypt_password(decrypted_password, new_key)
+        password = decrypt_password(password_entry, old_key)
+        encrypted_password, iv, auth_tag = encrypt_password(password, new_key)
         
         password_entry.encrypted_password = encrypted_password
         password_entry.encryption_iv = iv
@@ -460,11 +457,11 @@ def decrypt_password(password_entry, key):
     
     return decrypted_password
 
-def encrypt_password(decrypted_password, key):
+def encrypt_password(password, key):
     encryption_iv = os.urandom(12)
     cipher = Cipher(algorithms.AES(bytes.fromhex(key)), modes.GCM(encryption_iv))
     encryptor = cipher.encryptor()
-    encrypted_password = encryptor.update(decrypted_password) + encryptor.finalize()
+    encrypted_password = encryptor.update(password) + encryptor.finalize()
     auth_tag = encryptor.tag
     
     ### FOR DEBUG ONLY!!!
