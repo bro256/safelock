@@ -125,6 +125,10 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
         if form.is_valid():
             password = form.cleaned_data['password']
             key_in_hex = self.request.session.get('derived_key')
+
+            result = encrypt_password('my_password')
+            encrypted_password, iv, auth_tag = result
+
             key = bytes.fromhex(key_in_hex)
             iv = os.urandom(12)
 
@@ -457,8 +461,8 @@ def decrypt_password(password_entry, key):
     return decrypted_password
 
 def encrypt_password(decrypted_password, key):
-    iv = os.urandom(12)
-    cipher = Cipher(algorithms.AES(bytes.fromhex(key)), modes.GCM(iv))
+    encryption_iv = os.urandom(12)
+    cipher = Cipher(algorithms.AES(bytes.fromhex(key)), modes.GCM(encryption_iv))
     encryptor = cipher.encryptor()
     encrypted_password = encryptor.update(decrypted_password) + encryptor.finalize()
     auth_tag = encryptor.tag
@@ -466,5 +470,5 @@ def encrypt_password(decrypted_password, key):
     ### FOR DEBUG ONLY!!!
     #print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
     
-    return encrypted_password, iv, auth_tag
+    return encrypted_password, encryption_iv, auth_tag
     
