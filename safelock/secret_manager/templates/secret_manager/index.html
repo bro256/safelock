@@ -2,17 +2,47 @@
 {% block title %} {{ block.super }} {% endblock title %}
 {% block content %}
     <div class="row">
-        <h1 class="mb-3">SafeLock Password Manager</h1>
+        <h1 class="mb-3">SafeLock</h1>
     </div>
     <div class="row">
-        <p>SafeLock is password manager designed to help you keep your online accounts safe and easily accessible. The project is still in progress, so please do not use it in real environment yet.</p>
-        <p>"Securely manage and protect your passwords online with our SafeLock password manager.
+        <h2>About</h2>
+        <p>SafeLock is password manager designed to help you keep your online accounts safe and easily accessible. <strong>The project is still in progress, so please do not use it in real environment yet.</strong></p>
+        <p>Securely manage and protect your passwords online with our SafeLock password manager.
             Our platform offers a convenient and reliable solution for storing, generating, and organizing your passwords in one secure location.
             With state-of-the-art encryption, your sensitive data remains safe from unauthorized access.
             Easily access your passwords anytime, anywhere, from any device, ensuring seamless login experiences across all your accounts.
             Take control of your online security and simplify your digital life with our online password manager,
-            designed to safeguard your credentials and provide peace of mind."
+            designed to safeguard your credentials and provide peace of mind.
         </p>
+    </div>
+    <div class="row">
+        <h2 class="mb-3">Cryptography</h2>
+        <h4>Python cryptography libraries</h4>
+        <ul>
+            <li><a href="https://cryptography.io/en/latest/">Cryptography</a> - the most beautiful and well-documented python library for cryptography</li>
+        </ul>
+        <h4>Key derivation function</h4>
+        <ul>
+            <li>PBKDF2</li>
+            <li>Iterations: 600 000 (2023 OWASP recommendation)</li>
+            <li>Salt: 128 bits (US National Institute of Standards and Technology (NIST) recommendation)</li>
+            <li>Key length: 256 bits</li>
+            <li>Implemented in accordance with official <a href="https://cryptography.io/en/latest/hazmat/primitives/">Cryptography library KDF documentation</a></li>
+        </ul>
+        <h4>Symmetric encryption</h4>
+        <ul>
+            <li>Algorithm: AES-256</li>
+            <li>Key length: 256 bits</li>
+            <li>Mode: GCM (Galois/Counter Mode)</li>
+            <li>Block size: 128 bits</li>
+            <li>Authentication tag: 112 bits</li>
+            <li>Initialization vector (IV): 96 bits, random, different for every record</li>
+            <li>Implemented in accordance with official <a href="https://cryptography.io/en/latest/hazmat/primitives/symmetric-encryption/">Cryptography library Symetric Encryption documentation</a></li>
+        </ul>
+        <h4>Hashing</h4>
+        <ul>
+            <li>SHA-256</li>
+        </ul>
     </div>
     {% if not user.is_authenticated %}
         <div class="row">
