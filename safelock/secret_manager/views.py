@@ -16,6 +16,7 @@ from typing import Any, Dict
 import csv
 from io import StringIO
 from django.http import HttpResponse
+import csv
 
 # All cryptography related functions located in cryptography.py file
 from .cryptography import generate_password, derive_key, reencrypt_all_passwords, encrypt_password, decrypt_password
@@ -344,10 +345,53 @@ class PasswordEntriesExportView(View):
 
         # Create the HttpResponse object with CSV content type
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="passwords.csv"'
+        response['Content-Disposition'] = 'attachment; filename="safelock_passwords.csv"'
 
         # Write the CSV data to the response
         response.write(csv_data.getvalue())
 
         return response
 
+
+class PasswordEntriesImportView(View):
+    def post(self, request):
+        # Retrieve the uploaded CSV file
+        csv_file = request.FILES.get('csv_file')
+
+        # Read the CSV file data
+        csv_data = csv_file.read().decode('utf-8')
+
+        # Parse the CSV data
+        reader = csv.reader(csv_data.splitlines())
+        header = next(reader)  # Skip the header row
+
+        derived_key_hex = request.session.get('derived_key')
+
+        # Process the CSV data and import the password entries
+        for row in reader:
+            print(row)
+            # Extract the relevant data from each row (record)
+            title = row[0]  # First column of the row
+            username = row[1]  # Second column of the row
+            website = row[2]  # Third column of the row
+            password_bytes = row[3].encode()  # Fourth column of the row
+            is_in_bookmarks = row[4]  # Fifth column of the row
+            
+            encryption_data = encrypt_password(password_bytes, derived_key_hex)
+            encrypted_password, encryption_iv, auth_tag = encryption_data
+
+            # Create and save the PasswordEntry object with encrypted password
+            password_entry = PasswordEntry(
+                owner=request.user,
+                title=title,
+                username=username,
+                encrypted_password=encrypted_password,
+                encryption_iv=encryption_iv,
+                auth_tag=auth_tag, 
+                website=website,    
+                is_in_bookmarks=is_in_bookmarks
+            )
+            password_entry.save()
+
+        # Redirect to a success page or another relevant URL
+        return redirect('profile')

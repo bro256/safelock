@@ -7,4 +7,12 @@
     <p class="fs-5">Email: {{ user.email }}</p>
     <a class="btn btn-primary" href="{% url 'password_change' %}" role="button">Change Login Password</a>
     <a class="btn btn-danger" href="{% url 'password_entries_to_csv' %}">Export all passwords to CSV</a>
+    
+    <h2>Import Passwords from CSV</h2>
+    <form method="post" action="{% url 'password_entries_import' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv" required>
+        <button class="btn btn-primary mb-3" type="submit">Import</button>
+    </form>
+    
 {% endblock content %}
