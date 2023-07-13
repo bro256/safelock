@@ -13,6 +13,10 @@ from django.views import generic, View
 from django.views.generic.edit import UpdateView, DeleteView
 from typing import Any, Dict
 
+import csv
+from io import StringIO
+from django.http import HttpResponse
+
 # All cryptography related functions located in cryptography.py file
 from .cryptography import generate_password, derive_key, reencrypt_all_passwords, encrypt_password, decrypt_password
 
@@ -285,28 +289,65 @@ class PasswordEntryToggleBookmarksView(View):
 
 class PasswordGeneratorView(View):
     template_name = 'secret_manager/password_generator.html'
-
-    # def generate_password(self, length=16, letters=True, numbers=True, symbols=False):
-    #     characters = ''
-    #     if letters:
-    #         characters += string.ascii_letters
-    #     if numbers:
-    #         characters += string.digits
-    #     if symbols:
-    #         characters += string.punctuation
-
-    #     password = ''.join(random.choice(characters) for _ in range(length))
-    #     return password
-
-    # def get(self, request):
-    #     length = int(request.GET.get('length', 16))
-    #     letters = bool(request.GET.get('letters', True))
-    #     numbers = bool(request.GET.get('numbers', True))
-    #     symbols = bool(request.GET.get('symbols', False))
-
-    #     password = self.generate_password(length, letters, numbers, symbols)
-
-    #     return render(request, self.template_name, {'password': password})
     
     def get(self, request):
         return render(request, self.template_name)
+    
+
+# def export_password_entries_to_csv(request):
+#     # Retrieve the encrypted passwords from the database
+#     password_entries = PasswordEntry.objects.filter(owner=request.user)
+
+#     # Create the CSV data
+#     csv_data = StringIO()
+#     writer = csv.writer(csv_data)
+#     writer.writerow(['Title', 'Username', 'Website', 'Decrypted Password'])  # CSV header
+
+#     derived_key_hex = request.session.get('derived_key')
+
+#     # Decrypt and write each password entry to the CSV
+#     for entry in password_entries:
+#         decrypted_password_byte_string = decrypt_password(entry, derived_key_hex)
+#         # Convert the decrypted password to a string
+#         decrypted_password = decrypted_password_byte_string.decode('utf-8')
+#         writer.writerow([entry.title, entry.username, entry.website, entry.is_in_bookmarks, entry.is_in_trash, entry.created_at, decrypted_password])
+
+#     # Create the HttpResponse object with CSV content type
+#     response = HttpResponse(content_type='text/csv')
+#     response['Content-Disposition'] = 'attachment; filename="passwords.csv"'
+
+#     # Write the CSV data to the response
+#     response.write(csv_data.getvalue())
+
+#     return response
+
+
+
+class PasswordEntriesExportView(View):
+    def get(self, request):
+        # Retrieve the encrypted passwords from the database
+        password_entries = PasswordEntry.objects.filter(owner=request.user)
+
+        # Create the CSV data
+        csv_data = StringIO()
+        writer = csv.writer(csv_data)
+        writer.writerow(['Title', 'Username', 'Website', 'Decrypted Password'])  # CSV header
+
+        derived_key_hex = request.session.get('derived_key')
+
+        # Decrypt and write each password entry to the CSV
+        for entry in password_entries:
+            decrypted_password_byte_string = decrypt_password(entry, derived_key_hex)
+            # Convert the decrypted password to a string
+            decrypted_password = decrypted_password_byte_string.decode('utf-8')
+            writer.writerow([entry.title, entry.username, entry.website, entry.is_in_bookmarks, entry.is_in_trash, entry.created_at, decrypted_password])
+
+        # Create the HttpResponse object with CSV content type
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="passwords.csv"'
+
+        # Write the CSV data to the response
+        response.write(csv_data.getvalue())
+
+        return response
+
