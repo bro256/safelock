@@ -326,12 +326,12 @@ class PasswordGeneratorView(View):
 class PasswordEntriesExportView(View):
     def get(self, request):
         # Retrieve the encrypted passwords from the database
-        password_entries = PasswordEntry.objects.filter(owner=request.user)
+        password_entries = PasswordEntry.objects.filter(owner=request.user, is_in_trash=False)
 
         # Create the CSV data
         csv_data = StringIO()
         writer = csv.writer(csv_data)
-        writer.writerow(['Title', 'Username', 'Website', 'Decrypted Password'])  # CSV header
+        writer.writerow(['Title', 'Username', 'Website', 'Password', 'Bookmark'])  # CSV header
 
         derived_key_hex = request.session.get('derived_key')
 
@@ -340,7 +340,7 @@ class PasswordEntriesExportView(View):
             decrypted_password_byte_string = decrypt_password(entry, derived_key_hex)
             # Convert the decrypted password to a string
             decrypted_password = decrypted_password_byte_string.decode('utf-8')
-            writer.writerow([entry.title, entry.username, entry.website, entry.is_in_bookmarks, entry.is_in_trash, entry.created_at, decrypted_password])
+            writer.writerow([entry.title, entry.username, entry.website, decrypted_password, entry.is_in_bookmarks])
 
         # Create the HttpResponse object with CSV content type
         response = HttpResponse(content_type='text/csv')

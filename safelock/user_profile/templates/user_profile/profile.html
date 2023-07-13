@@ -5,5 +5,6 @@
     <p class="fs-4">{{ user.first_name }} {{ user.last_name }}</p>
     <p class="fs-4">Username: {{ user.username }}</p>
     <p class="fs-5">Email: {{ user.email }}</p>
-    <a class="btn btn-primary" href="{% url 'password_change' %}" role="button">Change Password</a>
+    <a class="btn btn-primary" href="{% url 'password_change' %}" role="button">Change Login Password</a>
+    <a class="btn btn-danger" href="{% url 'password_entries_to_csv' %}">Export all passwords to CSV</a>
 {% endblock content %}

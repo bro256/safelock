@@ -20,5 +20,5 @@ urlpatterns = [
     path('generate-password/', generate_password, name='generate_password'),
     path('password_generator/', views.PasswordGeneratorView.as_view(), name='password_generator'),
 
-    path('password_entries/export/', views.PasswordEntriesExportView.as_view(), name='export_password_entries_to_csv'),
+    path('password_entries/export/', views.PasswordEntriesExportView.as_view(), name='password_entries_to_csv'),
 ]
