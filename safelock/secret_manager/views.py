@@ -281,10 +281,10 @@ class PasswordEntryToggleBookmarksView(View):
     
         # Rredirect URL based on the new value
         redirect_url = reverse('password_entry_list') 
-        if password_entry.is_in_bookmarks:
-            messages.success(self.request, _('Password entry added to Bookmarks successfully!'))
-        else:
-            messages.success(self.request, _('Password entry removed from Bookmarks successfully!'))
+        # if password_entry.is_in_bookmarks:
+        #     messages.success(self.request, _('Password entry added to Bookmarks successfully!'))
+        # else:
+        #     messages.success(self.request, _('Password entry removed from Bookmarks successfully!'))
         return redirect(redirect_url)
        
 

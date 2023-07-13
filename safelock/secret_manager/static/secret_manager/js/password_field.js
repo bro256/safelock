@@ -25,12 +25,12 @@ function passwordToClipboard() {
   textField.type = textField.type === "password" ? "text" : "password";
 }
 
-async function generatePassword(length = 16, letters = true, numbers = true, symbols = true) {
+async function generatePassword(length = 16, lowercase=true, uppercase=true, numbers = true, symbols = true) {
   console.log("Generate Password button clicked"); // Debug
 
   try {
     // Prepare the URL with query parameters for the server endpoint
-    const url = `/generate-password/?length=${encodeURIComponent(length)}&letters=${encodeURIComponent(letters)}&numbers=${encodeURIComponent(numbers)}&symbols=${encodeURIComponent(symbols)}`;
+    const url = `/generate-password/?length=${encodeURIComponent(length)}&lowercase=${encodeURIComponent(lowercase)}&uppercase=${encodeURIComponent(uppercase)}&numbers=${encodeURIComponent(numbers)}&symbols=${encodeURIComponent(symbols)}`;
 
     // Send a GET request to the server endpoint
     const response = await fetch(url);
@@ -102,9 +102,10 @@ window.addEventListener("DOMContentLoaded", function() {
 
 document.getElementById('generate-button').addEventListener('click', function() {
   const length = document.getElementById('length').value;
-  const letters = true;
+  const lowercase = document.getElementById('lowercase').checked;
+  const uppercase = document.getElementById('uppercase').checked;
   const numbers = document.getElementById('numbers').checked;
   const symbols = document.getElementById('symbols').checked;
 
-  generatePassword(length, letters, numbers, symbols);
+  generatePassword(length, lowercase, uppercase, numbers, symbols);
 });

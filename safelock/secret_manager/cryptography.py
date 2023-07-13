@@ -13,19 +13,38 @@ import string
 
 def generate_password(request: HttpRequest) -> JsonResponse:
     length = int(request.GET.get('length', 16))
-    letters = request.GET.get('letters', 'true').lower() == 'true'
+    lowercase = request.GET.get('lowercase', 'true').lower() == 'true'
+    uppercase = request.GET.get('uppercase', 'true').lower() == 'true'
     numbers = request.GET.get('numbers', 'true').lower() == 'true'
     symbols = request.GET.get('symbols', 'true').lower() == 'true'
+    print(length)
+    print(lowercase)
+    print(uppercase)
+    print(numbers)
+    print(symbols)
 
     characters = ''
-    if letters:
-        characters += string.ascii_letters
+    # if letters:
+    #     characters += string.ascii_letters
+    # if numbers:
+    #     characters += string.digits
+    # if symbols:
+    #     characters += string.punctuation
+    if lowercase:
+        characters += 'abcdefghijklmnopqrstuvwxyz'
+    if uppercase:
+        characters += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if numbers:
-        characters += string.digits
+        characters += '0123456789'
     if symbols:
-        characters += string.punctuation
+        characters += '!"#$%&\'()*+-./:;<=>?@[\]^_`{|}~'
+    
+    print(characters)
 
-    password = ''.join(random.choice(characters) for _ in range(length))
+    if characters:
+        password = ''.join(random.choice(characters) for _ in range(length))
+    else:
+        password = ''
 
     return JsonResponse({'password': password})
 
