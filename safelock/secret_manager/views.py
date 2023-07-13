@@ -279,28 +279,30 @@ class PasswordEntryToggleBookmarksView(View):
         return redirect(redirect_url)
        
 
-class GeneratePasswordView(View):
+class PasswordGeneratorView(View):
     template_name = 'secret_manager/password_generator.html'
 
-    def generate_password(self, length=16, letters=True, numbers=True, symbols=False):
-        characters = ''
-        if letters:
-            characters += string.ascii_letters
-        if numbers:
-            characters += string.digits
-        if symbols:
-            characters += string.punctuation
+    # def generate_password(self, length=16, letters=True, numbers=True, symbols=False):
+    #     characters = ''
+    #     if letters:
+    #         characters += string.ascii_letters
+    #     if numbers:
+    #         characters += string.digits
+    #     if symbols:
+    #         characters += string.punctuation
 
-        password = ''.join(random.choice(characters) for _ in range(length))
-        return password
+    #     password = ''.join(random.choice(characters) for _ in range(length))
+    #     return password
 
+    # def get(self, request):
+    #     length = int(request.GET.get('length', 16))
+    #     letters = bool(request.GET.get('letters', True))
+    #     numbers = bool(request.GET.get('numbers', True))
+    #     symbols = bool(request.GET.get('symbols', False))
+
+    #     password = self.generate_password(length, letters, numbers, symbols)
+
+    #     return render(request, self.template_name, {'password': password})
+    
     def get(self, request):
-        length = int(request.GET.get('length', 16))
-        letters = bool(request.GET.get('letters', True))
-        numbers = bool(request.GET.get('numbers', True))
-        symbols = bool(request.GET.get('symbols', False))
-
-        password = self.generate_password(length, letters, numbers, symbols)
-
-        return render(request, self.template_name, {'password': password})
-
+        return render(request, self.template_name)
