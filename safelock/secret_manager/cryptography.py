@@ -54,41 +54,41 @@ def derive_key(username, password):
     return derived_key.hex()
 
 
-def reencrypt_all_passwords(user, old_password, new_password):
+def reencrypt_all_passwords(user, old_password_bytes, new_password_bytes):
     # Derive the old and new keys
-    old_key = derive_key(user.username, old_password)
-    new_key = derive_key(user.username, new_password)
+    old_derived_key_hex = derive_key(user.username, old_password_bytes)
+    new_derived_key_hex = derive_key(user.username, new_password_bytes)
     password_entries = PasswordEntry.objects.filter(owner=user)
     
     ### FOR DEBUG ONLY!!!
-    #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_key)} New key bytes: {bytes.fromhex(new_key)}")
+    #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_derived_key_hex)} New key bytes: {bytes.fromhex(new_derived_key_hex)}")
 
     for password_entry in password_entries:
-        password = decrypt_password(password_entry, old_key)
-        encrypted_password, iv, auth_tag = encrypt_password(password, new_key)
+        password_bytes = decrypt_password(password_entry, old_derived_key_hex)
+        encrypted_password, encryption_iv, auth_tag = encrypt_password(password_bytes, new_derived_key_hex)
         
         password_entry.encrypted_password = encrypted_password
-        password_entry.encryption_iv = iv
+        password_entry.encryption_iv = encryption_iv
         password_entry.auth_tag = auth_tag
         password_entry.save()
 
 
-def decrypt_password(password_entry, key):
-    cipher = Cipher(algorithms.AES(bytes.fromhex(key)), modes.GCM(password_entry.encryption_iv, password_entry.auth_tag))
+def decrypt_password(password_entry, derived_key_hex):
+    cipher = Cipher(algorithms.AES(bytes.fromhex(derived_key_hex)), modes.GCM(password_entry.encryption_iv, password_entry.auth_tag))
     decryptor = cipher.decryptor()
-    decrypted_password = decryptor.update(password_entry.encrypted_password) + decryptor.finalize()
+    password_bytes = decryptor.update(password_entry.encrypted_password) + decryptor.finalize()
     
     ### FOR DEBUG ONLY!!!
     #decrypted_password_str = decrypted_password.decode('utf-8')
     #print(f"DECRYPTION. ID: Encrypted pass: {password_entry.encrypted_password} iv: {password_entry.encryption_iv} tag: {password_entry.auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}")
     
-    return decrypted_password
+    return password_bytes
 
-def encrypt_password(password, key):
+def encrypt_password(password_bytes, derived_key_hex):
     encryption_iv = os.urandom(12)
-    cipher = Cipher(algorithms.AES(bytes.fromhex(key)), modes.GCM(encryption_iv))
+    cipher = Cipher(algorithms.AES(bytes.fromhex(derived_key_hex)), modes.GCM(encryption_iv))
     encryptor = cipher.encryptor()
-    encrypted_password = encryptor.update(password) + encryptor.finalize()
+    encrypted_password = encryptor.update(password_bytes) + encryptor.finalize()
     auth_tag = encryptor.tag
     
     ### FOR DEBUG ONLY!!!

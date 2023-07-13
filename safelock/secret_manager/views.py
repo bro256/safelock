@@ -74,10 +74,10 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
         form = self.form_class(request.POST)
         if form.is_valid():
             password_bytes = form.cleaned_data['password'].encode()
-            key_in_hex = self.request.session.get('derived_key')
+            derived_key_hex = self.request.session.get('derived_key')
 
             # Calling password encryption function
-            encryption_data = encrypt_password(password_bytes, key_in_hex)
+            encryption_data = encrypt_password(password_bytes, derived_key_hex)
 
             encrypted_password, encryption_iv, auth_tag = encryption_data
 
@@ -124,14 +124,11 @@ class PasswordEntryDetailView(UserPassesTestMixin,generic.DetailView):
         context = super().get_context_data(**kwargs)
 
         # Retrieve the derived key from the session
-        derived_key_in_hex = self.request.session.get('derived_key')
-        # derived_key = bytes.fromhex(derived_key_in_hex)
-
-        # Retrieve the current PasswordEntry object
-        password_entry = self.get_object()
+        derived_key_hex = self.request.session.get('derived_key')
+        # derived_key = bytes.fromhex(derived_key_hex)
 
         # Call the decrypt_password function to decrypt the password
-        decrypted_password_byte_string = decrypt_password(password_entry, derived_key_in_hex)
+        decrypted_password_byte_string = decrypt_password(self.object, derived_key_hex)
 
         # Convert the decrypted password to a string
         decrypted_password = decrypted_password_byte_string.decode('utf-8')
@@ -174,9 +171,9 @@ class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
         context = super().get_context_data(**kwargs)
 
         # Retrieve the derived key from the session
-        derived_key_in_hex = self.request.session.get('derived_key')
-        # derived_key = bytes.fromhex(derived_key_in_hex)
-        decrypted_password_byte_string = decrypt_password(self.object, derived_key_in_hex)
+        derived_key_hex = self.request.session.get('derived_key')
+        # derived_key = bytes.fromhex(derived_key_hex)
+        decrypted_password_byte_string = decrypt_password(self.object, derived_key_hex)
         
         # Convert the decrypted password to a string
         decrypted_password = decrypted_password_byte_string.decode('utf-8')
@@ -195,10 +192,10 @@ class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
         instance = form.save(commit=False)
         
         password_bytes = form.cleaned_data['password'].encode()
-        key_in_hex = self.request.session.get('derived_key')
+        derived_key_hex = self.request.session.get('derived_key')
         
         # Calling password encryption function
-        encryption_data = encrypt_password(password_bytes, key_in_hex)
+        encryption_data = encrypt_password(password_bytes, derived_key_hex)
 
         encrypted_password, encryption_iv, auth_tag = encryption_data
 
