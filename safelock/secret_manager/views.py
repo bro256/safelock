@@ -5,15 +5,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.db.models import Q
+from django.db.models.query import QuerySet
 from django.shortcuts import redirect, render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views import generic, View
 from django.views.generic.edit import UpdateView, DeleteView
 from typing import Any, Dict
-
-import random
-import string
 
 # All cryptography related functions located in cryptography.py file
 from .cryptography import generate_password, derive_key, reencrypt_all_passwords, encrypt_password, decrypt_password
@@ -48,7 +46,16 @@ class PasswordEntryListView(generic.ListView):
     template_name = "secret_manager/password_entry_list.html"
     
     def get_queryset(self):
-        return self.model.objects.filter(owner=self.request.user, is_in_trash=False)
+        qs = self.model.objects.filter(owner=self.request.user, is_in_trash=False)
+        query = self.request.GET.get('query')
+
+        if query:
+            qs = qs.filter(
+                Q(website__icontains=query) |
+                Q(title__icontains=query)
+            )
+
+        return qs
     
 
 class PasswordEntryTrashListView(generic.ListView):
