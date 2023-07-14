@@ -45,24 +45,7 @@ class CustomLoginView(LoginView):
         return super().form_valid(form)
 
 
-# class PasswordEntryListView(generic.ListView):
-#     model = PasswordEntry
-#     paginate_by = 10
-#     template_name = "secret_manager/password_entry_list.html"
-    
-#     def get_queryset(self):
-#         qs = self.model.objects.filter(owner=self.request.user, is_in_trash=False)
-#         query = self.request.GET.get('query')
-
-#         if query:
-#             qs = qs.filter(
-#                 Q(website__icontains=query) |
-#                 Q(title__icontains=query)
-#             )
-
-#         return qs
-
-class PasswordEntryListView(generic.ListView):
+class PasswordEntryListView(LoginRequiredMixin, generic.ListView):
     model = PasswordEntry
     paginate_by = 10
     template_name = "secret_manager/password_entry_list.html"
@@ -88,7 +71,7 @@ class PasswordEntryListView(generic.ListView):
         return context
     
 
-class PasswordEntryTrashListView(generic.ListView):
+class PasswordEntryTrashListView(LoginRequiredMixin, generic.ListView):
     model = PasswordEntry
     paginate_by = 10
     template_name = "secret_manager/password_entry_trash_list.html"
@@ -97,7 +80,7 @@ class PasswordEntryTrashListView(generic.ListView):
         return self.model.objects.filter(owner=self.request.user, is_in_trash=True)
 
 
-class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
+class PasswordEntryCreateView(LoginRequiredMixin, generic.CreateView):
     model = PasswordEntry
     form_class = PasswordEntryForm
     template_name = 'secret_manager/password_entry_form.html'
@@ -148,12 +131,8 @@ class PasswordEntryCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.C
         form = super().get_form(form_class)
         return form
 
-    # Checks that the user passes the given test
-    def test_func(self):
-        return self.request.user.is_authenticated
 
-
-class PasswordEntryDetailView(UserPassesTestMixin,generic.DetailView):
+class PasswordEntryDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
     model = PasswordEntry
     template_name = "secret_manager/password_entry_detail.html"
 
@@ -198,7 +177,7 @@ class CustomPasswordChangeView(PasswordChangeView):
         return self.success_url
 
 
-class PasswordEntryUpdateView(UserPassesTestMixin, UpdateView):
+class PasswordEntryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = PasswordEntry
     form_class = PasswordEntryUpdateForm
     template_name = 'secret_manager/password_entry_form.html'
@@ -263,7 +242,7 @@ class PasswordEntryDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteVie
         return self.request.user == self.get_object().owner
 
 
-class PasswordEntriesDelete(View):
+class PasswordEntriesDelete(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, 'secret_manager/password_entries_delete.html')
     
@@ -275,7 +254,7 @@ class PasswordEntriesDelete(View):
         return redirect('password_entry_list_trash')
 
 
-class PasswordEntryToggleTrashView(View):
+class PasswordEntryToggleTrashView(LoginRequiredMixin, View):
     def get(self, request, pk):
         # Retrieve the PasswordEntry object if it belongs to the current user
         password_entry = get_object_or_404(PasswordEntry, pk=pk, owner=request.user)
@@ -295,7 +274,7 @@ class PasswordEntryToggleTrashView(View):
         return redirect(redirect_url)
 
 
-class PasswordEntryToggleBookmarksView(View):
+class PasswordEntryToggleBookmarksView(LoginRequiredMixin, View):
     def get(self, request, pk):
         # Retrieve the PasswordEntry object
         password_entry = get_object_or_404(PasswordEntry, pk=pk, owner=request.user)
@@ -313,14 +292,14 @@ class PasswordEntryToggleBookmarksView(View):
         return redirect(redirect_url)
        
 
-class PasswordGeneratorView(View):
+class PasswordGeneratorView(LoginRequiredMixin, View):
     template_name = 'secret_manager/password_generator.html'
     
     def get(self, request):
         return render(request, self.template_name)
     
 
-class PasswordEntriesExportView(View):
+class PasswordEntriesExportView(LoginRequiredMixin, View):
     def get(self, request):
         # Retrieve the encrypted passwords from the database
         password_entries = PasswordEntry.objects.filter(owner=request.user, is_in_trash=False)
@@ -349,7 +328,7 @@ class PasswordEntriesExportView(View):
         return response
 
 
-class PasswordEntriesImportView(View):
+class PasswordEntriesImportView(LoginRequiredMixin, View):
     def post(self, request):
         csv_file = request.FILES.get('csv_file')
 

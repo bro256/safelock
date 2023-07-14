@@ -15,27 +15,6 @@
 </head>
 <body>
 {% if user.is_authenticated %}
-    {% comment %} <header>
-        <nav class="navbar navbar-expand-md navbar-light bg-light">
-            <div class="container">
-                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                    <div class="navbar-nav">
-                        <a class="nav-link" href="{% url 'index' %}">{% trans "home"|capfirst %}</a>
-                        <a class="nav-link" href="{% url 'password_entry_list' %}">{% trans "passwords"|capfirst %}</a>
-                        <a class="nav-link" href="{% url 'password_generator' %}">{% trans "password generator"|capfirst %}</a>
-                        <a class="nav-link" href="{% url 'password_entry_list_trash' %}">{% trans "trash"|capfirst %}</a>
-                        {% if user.is_staff or user.is_superuser %}
-                            <a class="nav-link" href="{% url 'admin:index' %}">{% trans "admin"|capfirst %}</a>
-                        {% endif %}
-                    </div>
-                    <div class="navbar-nav ms-auto">
-                        <div class="align-self-center">You are logged in as: <strong><a href="{% url 'profile' %}"> {{ user.username }}</a></strong></div>
-                        <a class="nav-link" href="{% url 'logout' %}">{% trans "logout"|capfirst %}</a>
-                    </div>
-                </div> 
-            </div>
-        </nav>
-    </header> {% endcomment %}
     <header>
         <nav class="navbar navbar-expand-md navbar-light bg-primary mb-3">
             <div class="container">
@@ -78,9 +57,6 @@
             </div>
         </nav>
     </header>
-
-
-
 {% endif %}
 <main>
 {% if messages %}
