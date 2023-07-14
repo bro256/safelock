@@ -295,35 +295,6 @@ class PasswordGeneratorView(View):
         return render(request, self.template_name)
     
 
-# def export_password_entries_to_csv(request):
-#     # Retrieve the encrypted passwords from the database
-#     password_entries = PasswordEntry.objects.filter(owner=request.user)
-
-#     # Create the CSV data
-#     csv_data = StringIO()
-#     writer = csv.writer(csv_data)
-#     writer.writerow(['Title', 'Username', 'Website', 'Decrypted Password'])  # CSV header
-
-#     derived_key_hex = request.session.get('derived_key')
-
-#     # Decrypt and write each password entry to the CSV
-#     for entry in password_entries:
-#         decrypted_password_byte_string = decrypt_password(entry, derived_key_hex)
-#         # Convert the decrypted password to a string
-#         decrypted_password = decrypted_password_byte_string.decode('utf-8')
-#         writer.writerow([entry.title, entry.username, entry.website, entry.is_in_bookmarks, entry.is_in_trash, entry.created_at, decrypted_password])
-
-#     # Create the HttpResponse object with CSV content type
-#     response = HttpResponse(content_type='text/csv')
-#     response['Content-Disposition'] = 'attachment; filename="passwords.csv"'
-
-#     # Write the CSV data to the response
-#     response.write(csv_data.getvalue())
-
-#     return response
-
-
-
 class PasswordEntriesExportView(View):
     def get(self, request):
         # Retrieve the encrypted passwords from the database
@@ -332,7 +303,7 @@ class PasswordEntriesExportView(View):
         # Create the CSV data
         csv_data = StringIO()
         writer = csv.writer(csv_data)
-        writer.writerow(['Title', 'Username', 'Website', 'Password', 'Bookmark'])  # CSV header
+        writer.writerow(['Title', 'Username', 'Website', 'Password'])  # CSV header
 
         derived_key_hex = request.session.get('derived_key')
 
@@ -341,7 +312,7 @@ class PasswordEntriesExportView(View):
             decrypted_password_byte_string = decrypt_password(entry, derived_key_hex)
             # Convert the decrypted password to a string
             decrypted_password = decrypted_password_byte_string.decode('utf-8')
-            writer.writerow([entry.title, entry.username, entry.website, decrypted_password, entry.is_in_bookmarks])
+            writer.writerow([entry.title, entry.username, entry.website, decrypted_password])
 
         # Create the HttpResponse object with CSV content type
         response = HttpResponse(content_type='text/csv')
@@ -355,43 +326,50 @@ class PasswordEntriesExportView(View):
 
 class PasswordEntriesImportView(View):
     def post(self, request):
-        # Retrieve the uploaded CSV file
         csv_file = request.FILES.get('csv_file')
 
-        # Read the CSV file data
-        csv_data = csv_file.read().decode('utf-8')
+        # Check if the file has a valid format
+        if not csv_file.name.endswith('.csv'):
+            messages.warning(request, 'Invalid file format. Please upload a CSV file.')
+            return redirect('profile')
 
-        # Parse the CSV data
-        reader = csv.reader(csv_data.splitlines())
-        header = next(reader)  # Skip the header row
+        try:
+            # Read the CSV file data
+            csv_data = csv_file.read().decode('utf-8')
 
-        derived_key_hex = request.session.get('derived_key')
+            # Parse the CSV data
+            reader = csv.reader(csv_data.splitlines())
+            header = next(reader)  # Skip the header row
 
-        # Process the CSV data and import the password entries
-        for row in reader:
-            print(row)
-            # Extract the relevant data from each row (record)
-            title = row[0]  # First column of the row
-            username = row[1]  # Second column of the row
-            website = row[2]  # Third column of the row
-            password_bytes = row[3].encode()  # Fourth column of the row
-            is_in_bookmarks = row[4]  # Fifth column of the row
+            derived_key_hex = request.session.get('derived_key')
+
+            # Process the CSV data and import the password entries
+            for row in reader:
+                print(row)
+                # Extract the relevant data from each row (record)
+                title = row[0]  # First column of the row
+                username = row[1]  # Second column of the row
+                website = row[2]  # Third column of the row
+                password_bytes = row[3].encode()  # Fourth column of the row
+                
+                encryption_data = encrypt_password(password_bytes, derived_key_hex)
+                encrypted_password, encryption_iv, auth_tag = encryption_data
+
+                # Create and save the PasswordEntry object with encrypted password
+                password_entry = PasswordEntry(
+                    owner=request.user,
+                    title=title,
+                    username=username,
+                    encrypted_password=encrypted_password,
+                    encryption_iv=encryption_iv,
+                    auth_tag=auth_tag, 
+                    website=website,    
+                )
+                password_entry.save()
             
-            encryption_data = encrypt_password(password_bytes, derived_key_hex)
-            encrypted_password, encryption_iv, auth_tag = encryption_data
-
-            # Create and save the PasswordEntry object with encrypted password
-            password_entry = PasswordEntry(
-                owner=request.user,
-                title=title,
-                username=username,
-                encrypted_password=encrypted_password,
-                encryption_iv=encryption_iv,
-                auth_tag=auth_tag, 
-                website=website,    
-                is_in_bookmarks=is_in_bookmarks
-            )
-            password_entry.save()
-
-        # Redirect to a success page or another relevant URL
-        return redirect('profile')
+            messages.success(request, 'CSV file imported successfully.')
+            return redirect('profile')
+        
+        except csv.Error as e:
+            messages.error(request, 'Error processing CSV file: {}'.format(str(e)))
+            return redirect('profile')
