@@ -49,7 +49,10 @@
                             <a class="nav-link text-light" href="{% url 'index' %}">{% trans "home"|capfirst %}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-light" href="{% url 'password_entry_list' %}">{% trans "passwords"|capfirst %}</a>
+                            <a class="nav-link text-light" href="{% url 'password_entry_list_favorites' %}">{% trans "Favorites"|capfirst %}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-light" href="{% url 'password_entry_list' %}">{% trans "all passwords"|capfirst %}</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-light" href="{% url 'password_generator' %}">{% trans "password generator"|capfirst %}</a>

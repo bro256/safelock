@@ -6,6 +6,7 @@ from .views import generate_password
 urlpatterns = [
     path('', views.index, name='index'),
     path('passwords/', views.PasswordEntryListView.as_view(), name='password_entry_list'),
+    path('passwords/favorites/', views.PasswordEntryListView.as_view(is_favorites_page=True), name='password_entry_list_favorites'),
     path('passwords/trash/', views.PasswordEntryTrashListView.as_view(), name='password_entry_list_trash'),
     path('password_entries/delete/', views.PasswordEntriesDelete.as_view(), name='password_entries_delete'),
     path('password_entry/create/', views.PasswordEntryCreateView.as_view(), name='password_entry_create'),

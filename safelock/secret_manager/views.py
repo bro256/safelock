@@ -45,22 +45,47 @@ class CustomLoginView(LoginView):
         return super().form_valid(form)
 
 
+# class PasswordEntryListView(generic.ListView):
+#     model = PasswordEntry
+#     paginate_by = 10
+#     template_name = "secret_manager/password_entry_list.html"
+    
+#     def get_queryset(self):
+#         qs = self.model.objects.filter(owner=self.request.user, is_in_trash=False)
+#         query = self.request.GET.get('query')
+
+#         if query:
+#             qs = qs.filter(
+#                 Q(website__icontains=query) |
+#                 Q(title__icontains=query)
+#             )
+
+#         return qs
+
 class PasswordEntryListView(generic.ListView):
     model = PasswordEntry
     paginate_by = 10
     template_name = "secret_manager/password_entry_list.html"
-    
+    is_favorites_page = False  # Default value for is_favorites_page
+
     def get_queryset(self):
         qs = self.model.objects.filter(owner=self.request.user, is_in_trash=False)
-        query = self.request.GET.get('query')
 
+        if self.is_favorites_page:
+            qs = qs.filter(is_in_bookmarks=True)
+
+        query = self.request.GET.get('query')
         if query:
             qs = qs.filter(
                 Q(website__icontains=query) |
                 Q(title__icontains=query)
             )
-
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_favorites_page'] = self.is_favorites_page
+        return context
     
 
 class PasswordEntryTrashListView(generic.ListView):
