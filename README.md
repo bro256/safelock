@@ -46,6 +46,7 @@ SECRET_KEY = 'put your secret key here'
 ### Optional Settings
 There are some settings in settings.py you can modify depending on your security requirements.
 
+- Session Cookies
 The `SESSION_COOKIE_AGE` setting in Django determines the age of the session cookie in seconds. It specifies the duration for which a user's session remains active.
 By default, Django uses a session cookie that expires when the user's browser is closed. However, you can set a specific duration for the session cookie using the `SESSION_COOKIE_AGE` setting.
 To configure the session cookie age, update the `SESSION_COOKIE_AGE` value in the Django project's settings.py file. For example, to set the session cookie age to 1 hour (3600 seconds), add the following line to your settings.py file:
@@ -56,6 +57,13 @@ SESSION_COOKIE_AGE = 3600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 ```
 
+- Time Zone Configuration
+This Django project uses the local time zone to handle time conversions and display time-related data accurately. The time zone is configured in the Django settings file (`settings.py`).
+By default, the project is set to use the 'Europe/Vilnius' time zone, which corresponds to the local time zone in Vilnius, Lithuania.
+
+```
+TIME_ZONE = 'UTC'
+```
 
 ## Cryptography
 
