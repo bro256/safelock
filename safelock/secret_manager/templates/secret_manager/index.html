@@ -21,7 +21,7 @@
     </div>
     {% if not user.is_authenticated %}
         <div class="row">
-            <p>To access SafeLock, please <a class="btn btn-primary" href="{% url 'login' %}">Sign in</a>.
+            <p>To access SafeLock, please <a class="btn btn-primary" href="{% url 'login' %}">Sign in</a>
         </div>
     {% endif %}
 {% endblock content %}
