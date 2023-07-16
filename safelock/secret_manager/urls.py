@@ -20,5 +20,5 @@ urlpatterns = [
     path('accounts/login/', views.CustomLoginView.as_view(), name='login'),
     path('accounts/password_change/', views.CustomPasswordChangeView.as_view(template_name='registration/password_change.html'), name='password_change'),
     path('password_generator/', views.PasswordGeneratorView.as_view(), name='password_generator'),
-    path('password_generator/generate-password/', generate_password, name='generate_password'),
+    path('generate-password/', generate_password, name='generate_password'),
 ]
