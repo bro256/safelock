@@ -1,22 +1,19 @@
+import csv
 from . forms import PasswordEntryForm, PasswordEntryUpdateForm
 from . models import PasswordEntry
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.db.models import Q
-from django.db.models.query import QuerySet
+from django.http import HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views import generic, View
 from django.views.generic.edit import UpdateView, DeleteView
-from typing import Any, Dict
-
-import csv
 from io import StringIO
-from django.http import HttpResponse
-import csv
+from typing import Any, Dict
 
 # All cryptography related functions located in cryptography.py file
 from .cryptography import generate_password, derive_key, reencrypt_all_passwords, encrypt_password, decrypt_password
@@ -31,6 +28,7 @@ def index(request):
 
 class CustomLoginView(LoginView):
     def form_valid(self, form):
+        
         # Authenticate the user
         self.user = form.get_user()
 
@@ -39,11 +37,33 @@ class CustomLoginView(LoginView):
 
         # Get the logged in user and username
         username = self.user.username
+
+        # Derive key
         derived_key = derive_key(username, password)
         self.request.session['derived_key'] = derived_key
 
         return super().form_valid(form)
 
+
+class CustomPasswordChangeView(PasswordChangeView):
+
+    def form_valid(self, form):
+        
+        # Change the user's password
+        response = super().form_valid(form)
+
+        # Reencrypt passwords with the new password
+        reencrypt_all_passwords(self.request.user, form.cleaned_data['old_password'], form.cleaned_data['new_password2'])
+        
+        # Log out the user to get new PBKDF2 derived key
+        logout(self.request)
+        messages.success(self.request, _('Password changed successfuly!'))
+
+        return response
+
+    def get_success_url(self):
+        return self.success_url
+    
 
 class PasswordEntryListView(LoginRequiredMixin, generic.ListView):
     model = PasswordEntry
@@ -96,12 +116,11 @@ class PasswordEntryCreateView(LoginRequiredMixin, generic.CreateView):
             password_bytes = form.cleaned_data['password'].encode()
             derived_key_hex = self.request.session.get('derived_key')
 
-            # Calling password encryption function
+            # Encrypt password and get encryption data
             encryption_data = encrypt_password(password_bytes, derived_key_hex)
-
             encrypted_password, encryption_iv, auth_tag = encryption_data
 
-            # Save the encrypted password, IV, and tag to the model instance
+            # Save the encrypted password, IV, and auth-tag to the model instance
             instance = form.save(commit=False)
             instance.owner = request.user
             instance.encrypted_password = encrypted_password
@@ -139,11 +158,10 @@ class PasswordEntryDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.D
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Retrieve the derived key from the session
+        # Retrieve the derived key
         derived_key_hex = self.request.session.get('derived_key')
-        # derived_key = bytes.fromhex(derived_key_hex)
 
-        # Call the decrypt_password function to decrypt the password
+        # Decrypt the password
         decrypted_password_byte_string = decrypt_password(self.object, derived_key_hex)
 
         # Convert the decrypted password to a string
@@ -157,25 +175,6 @@ class PasswordEntryDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.D
         obj = self.get_object()
         return obj.owner == self.request.user
 
-    
-class CustomPasswordChangeView(PasswordChangeView):
-
-    def form_valid(self, form):
-        # Change the user's password
-        response = super().form_valid(form)
-
-        # Reencrypt passwords with the new password
-        reencrypt_all_passwords(self.request.user, form.cleaned_data['old_password'], form.cleaned_data['new_password2'])
-        
-        # Log out the user to get new PBKDF2 derived key
-        logout(self.request)
-        messages.success(self.request, _('Password changed successfuly!'))
-
-        return response
-
-    def get_success_url(self):
-        return self.success_url
-
 
 class PasswordEntryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = PasswordEntry
@@ -186,8 +185,9 @@ class PasswordEntryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Retrieve the derived key from the session
+        # Retrieve the derived key
         derived_key_hex = self.request.session.get('derived_key')
+
         # derived_key = bytes.fromhex(derived_key_hex)
         decrypted_password_byte_string = decrypt_password(self.object, derived_key_hex)
         
@@ -196,7 +196,6 @@ class PasswordEntryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
 
         # Add the decrypted password to the context
         context['password'] = decrypted_password
-        print(context)
 
         # Set the decrypted password value in the form field initial data
         context['form'].initial['password'] = decrypted_password
@@ -204,15 +203,20 @@ class PasswordEntryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
         return context
 
     def form_valid(self, form):
-        # Operations before saving
+
+        # Create database instance without saving to database immediately
         instance = form.save(commit=False)
         
+        # Convert the password to bytes
         password_bytes = form.cleaned_data['password'].encode()
+
+        # Retrieve the derived key
         derived_key_hex = self.request.session.get('derived_key')
         
-        # Calling password encryption function
+        # Encrypt password
         encryption_data = encrypt_password(password_bytes, derived_key_hex)
 
+        # Get encryption data
         encrypted_password, encryption_iv, auth_tag = encryption_data
 
         # Save the encrypted password, IV, and tag to the model instance
@@ -249,13 +253,13 @@ class PasswordEntriesDelete(LoginRequiredMixin, View):
     def post(self, request):
         user = request.user
         PasswordEntry.objects.filter(owner=user, is_in_trash=True).delete()
-
         messages.success(request, "Password entries deleted successfully!")
         return redirect('password_entry_list_trash')
 
 
 class PasswordEntryToggleTrashView(LoginRequiredMixin, View):
     def get(self, request, pk):
+
         # Retrieve the PasswordEntry object if it belongs to the current user
         password_entry = get_object_or_404(PasswordEntry, pk=pk, owner=request.user)
 
@@ -276,7 +280,8 @@ class PasswordEntryToggleTrashView(LoginRequiredMixin, View):
 
 class PasswordEntryToggleBookmarksView(LoginRequiredMixin, View):
     def get(self, request, pk):
-        # Retrieve the PasswordEntry object
+
+        # Retrieve the PasswordEntry object if it belongs to the current user
         password_entry = get_object_or_404(PasswordEntry, pk=pk, owner=request.user)
 
         # Toggle the is_in_trash value
@@ -285,10 +290,7 @@ class PasswordEntryToggleBookmarksView(LoginRequiredMixin, View):
     
         # Rredirect URL based on the new value
         redirect_url = reverse('password_entry_list') 
-        # if password_entry.is_in_bookmarks:
-        #     messages.success(self.request, _('Password entry added to Bookmarks successfully!'))
-        # else:
-        #     messages.success(self.request, _('Password entry removed from Bookmarks successfully!'))
+
         return redirect(redirect_url)
        
 
@@ -301,6 +303,7 @@ class PasswordGeneratorView(LoginRequiredMixin, View):
 
 class PasswordEntriesExportView(LoginRequiredMixin, View):
     def get(self, request):
+
         # Retrieve the encrypted passwords from the database
         password_entries = PasswordEntry.objects.filter(owner=request.user, is_in_trash=False)
 
@@ -309,11 +312,13 @@ class PasswordEntriesExportView(LoginRequiredMixin, View):
         writer = csv.writer(csv_data)
         writer.writerow(['Title', 'Username', 'Website', 'Password'])  # CSV header
 
+        # Retrieve the derived key
         derived_key_hex = request.session.get('derived_key')
 
         # Decrypt and write each password entry to the CSV
         for entry in password_entries:
             decrypted_password_byte_string = decrypt_password(entry, derived_key_hex)
+
             # Convert the decrypted password to a string
             decrypted_password = decrypted_password_byte_string.decode('utf-8')
             writer.writerow([entry.title, entry.username, entry.website, decrypted_password])
@@ -345,11 +350,12 @@ class PasswordEntriesImportView(LoginRequiredMixin, View):
             reader = csv.reader(csv_data.splitlines())
             header = next(reader)  # Skip the header row
 
+            # Retrieve the derived key
             derived_key_hex = request.session.get('derived_key')
 
             # Process the CSV data and import the password entries
             for row in reader:
-                print(row)
+
                 # Extract the relevant data from each row (record)
                 title = row[0]  # First column of the row
                 username = row[1]  # Second column of the row

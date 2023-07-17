@@ -1,15 +1,12 @@
+from . models import PasswordEntry
 import hashlib
 import os
+import random
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-
-from . models import PasswordEntry
-
 from django.http import HttpRequest, JsonResponse
 
-import random
-import string
 
 def generate_password(request: HttpRequest) -> JsonResponse:
     length = int(request.GET.get('length', 20))
@@ -17,19 +14,7 @@ def generate_password(request: HttpRequest) -> JsonResponse:
     uppercase = request.GET.get('uppercase', 'true').lower() == 'true'
     numbers = request.GET.get('numbers', 'true').lower() == 'true'
     symbols = request.GET.get('symbols', 'true').lower() == 'true'
-    print(length)
-    print(lowercase)
-    print(uppercase)
-    print(numbers)
-    print(symbols)
-
     characters = ''
-    # if letters:
-    #     characters += string.ascii_letters
-    # if numbers:
-    #     characters += string.digits
-    # if symbols:
-    #     characters += string.punctuation
     if lowercase:
         characters += 'abcdefghijklmnopqrstuvwxyz'
     if uppercase:
@@ -38,8 +23,6 @@ def generate_password(request: HttpRequest) -> JsonResponse:
         characters += '0123456789'
     if symbols:
         characters += '!"#$%&\'()*+-./:;<=>?@[\]^_`{|}~'
-    
-    print(characters)
 
     if characters:
         password = ''.join(random.choice(characters) for _ in range(length))
@@ -50,6 +33,7 @@ def generate_password(request: HttpRequest) -> JsonResponse:
 
 
 def derive_key(username, password):
+    
     # Hash the username
     username_hash = hashlib.sha256(username.encode()).digest()
 
@@ -74,18 +58,25 @@ def derive_key(username, password):
 
 
 def reencrypt_all_passwords(user, old_password_bytes, new_password_bytes):
+    
     # Derive the old and new keys
     old_derived_key_hex = derive_key(user.username, old_password_bytes)
     new_derived_key_hex = derive_key(user.username, new_password_bytes)
+    
     password_entries = PasswordEntry.objects.filter(owner=user)
     
     ### FOR DEBUG ONLY!!!
     #print(f"REENCRYPT FUNCTION. Old key bytes: {bytes.fromhex(old_derived_key_hex)} New key bytes: {bytes.fromhex(new_derived_key_hex)}")
 
     for password_entry in password_entries:
+
+        # Decrypt the password
         password_bytes = decrypt_password(password_entry, old_derived_key_hex)
+
+        # Encrypt the password and get encryption data
         encrypted_password, encryption_iv, auth_tag = encrypt_password(password_bytes, new_derived_key_hex)
-        
+
+        # Update instance encryption data
         password_entry.encrypted_password = encrypted_password
         password_entry.encryption_iv = encryption_iv
         password_entry.auth_tag = auth_tag
@@ -114,5 +105,4 @@ def encrypt_password(password_bytes, derived_key_hex):
     #print(f"ENCRYPTION. Encrypted pass: {encrypted_password} iv: {iv} Tag: {auth_tag} decrypted pass: {decrypted_password} decrypted pass str: {decrypted_password_str}") 
     
     return encrypted_password, encryption_iv, auth_tag
-    
     
