@@ -78,7 +78,7 @@ function calculatePasswordStrength(password) {
     }
   }
 
-  if (score > 2 && password.length < 11) {
+  if (score > 2 && password.length < 12) {
     score--;
   }
   
