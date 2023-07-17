@@ -93,8 +93,8 @@ TIME_ZONE = 'UTC'
 - For initialization vectrors: Operating system’s provided random number generator, which is available as `os.urandom()`
 - For random password generation: Python Random module, which is an in-built module of Python
 
-### Passwords in database"
-In the SafeLock passwords are encrypted to ensure their confidentiality. Here's an example of how encrypted passwords look like:
+### Passwords in database:
+In the SafeLock passwords are encrypted to ensure their confidentiality. Here's an example of how encrypted passwords look like in database:
 ```
 b'\xc7*@\xc3\x18\xab\xa5m\x15\x069?1=\x15h\xfc\x87\xcf'
 b'\xb7\x8c\xa7g75\xbc\x19\xf9\xef\x84\xa2%yN0~\xf6\x82\xa7\x80\xee\xd87j'n\xbe\xa0\x8c\xaa\xc8'
