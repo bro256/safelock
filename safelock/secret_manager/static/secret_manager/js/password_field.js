@@ -25,7 +25,7 @@ function passwordToClipboard() {
   textField.type = textField.type === "password" ? "text" : "password";
 }
 
-async function generatePassword(length = 16, lowercase=true, uppercase=true, numbers = true, symbols = true) {
+async function generatePassword(length = 20, lowercase=true, uppercase=true, numbers = true, symbols = true) {
   console.log("Generate Password button clicked"); // Debug
 
   try {
@@ -50,7 +50,6 @@ async function generatePassword(length = 16, lowercase=true, uppercase=true, num
   }
 }
 
-
 function showPasswordStrength() {
   var passwordInput = document.getElementById("password-field");
   var strengthIndicator = document.getElementById("password-strength");
@@ -64,34 +63,42 @@ function showPasswordStrength() {
 
 function calculatePasswordStrength(password) {
   var score = 0;
-  if (password.length >= 12) {
-    score += 1;
+  var patterns = {
+    length: /[^\s\S]/,
+    lowercase: /[a-z]/,
+    uppercase: /[A-Z]/,
+    digit: /\d/,
+    specialChar: /[!@#$%^&*()\-_=+[{\]}\\|;:'",<.>/?]/
+  };
+
+  // Check each pattern and increment the score
+  for (var pattern in patterns) {
+    if (patterns[pattern].test(password)) {
+      score++;
+    }
   }
-  if (/[a-z]/.test(password)) {
-    score += 1;
+
+  if (score > 2 && password.length < 11) {
+    score--;
   }
-  if (/[A-Z]/.test(password)) {
-    score += 1;
+  
+  if (score === 5 && password.length >= 16) {
+    score++;
   }
-  if (/\d/.test(password)) {
-    score += 1;
-  }
-  if (/[!@#$%^&*()\-_=+[{\]}\\|;:'",<.>/?]/.test(password)) {
-    score += 1;
-  }
+
   // Return the password strength level
-  if (score == 0) {
+  if (score === 0) {
     return "None";
-  } else if (score == 1) {
+  } else if (score === 1) {
     return "Weak";
-  } else if (score <= 3) {
+  } else if (score === 2) {
     return "Moderate";
-  } else {
+  } else if (score === 3) {
     return "Strong";
+  } else if (score >= 4) {
+    return "Very Strong";
   }
 }
-
-document.getElementById("password-field").addEventListener("input", showPasswordStrength);
 
 window.addEventListener("DOMContentLoaded", function() {
   // Hide the text field on page load
@@ -100,6 +107,7 @@ window.addEventListener("DOMContentLoaded", function() {
   showPasswordStrength();
 });
 
+document.getElementById("password-field").addEventListener("input", showPasswordStrength);
 document.getElementById('generate-button').addEventListener('click', function() {
   const length = document.getElementById('length').value;
   const lowercase = document.getElementById('lowercase').checked;

@@ -12,3 +12,26 @@
     max-width: 900px; /* Set the maximum width of the columns */
     margin: 0 auto; /* Center the columns horizontally */
 }
+.custom-width {
+  width: 80px;
+}
+
+.strength-level.none {
+  background-color: #ddd;
+}
+
+.strength-level.weak {
+  background-color: #ff4d4d;
+}
+
+.strength-level.moderate {
+  background-color: #ffc107;
+}
+
+.strength-level.strong {
+  background-color: #74ff4d;
+}
+
+.strength-level.very-strong {
+  background-color: #00cc00;
+}

@@ -12,7 +12,7 @@ import random
 import string
 
 def generate_password(request: HttpRequest) -> JsonResponse:
-    length = int(request.GET.get('length', 16))
+    length = int(request.GET.get('length', 20))
     lowercase = request.GET.get('lowercase', 'true').lower() == 'true'
     uppercase = request.GET.get('uppercase', 'true').lower() == 'true'
     numbers = request.GET.get('numbers', 'true').lower() == 'true'
