@@ -18,7 +18,7 @@
             <h2 class="card-title">Import Passwords</h2>
             <div class="row">
                 <div class="col">
-                    <h4>Step 1: Download your passwords as a .CSV file in password manager you have all your passwords</h4>
+                    <h4>Step 1: Download your passwords as a .CSV file in your old password manager</h4>
                     <p>Only passwords in the .CSV file format can be imported to your SafeLock account.</p>
                     <p><strong>Tip:</strong> To make sure your passwords are formatted properly, open your .CSV file. Check if the first line of your .CSV file includes these column names: title, username, website, password. If not, update your .CSV file.</p>
                 </div>
@@ -26,7 +26,7 @@
             <div class="row">
                 <div class="col">
                     <h4>Step 2: Import passwords</h4>
-                    <p>Select Choose File, choose CSV file you want to import, select Import.</p>
+                    <p>Select Choose File, choose .CSV file you want to import, select Import.</p>
                 </div>
                 <form method="post" action="{% url 'password_entries_import' %}" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -52,8 +52,8 @@
             <h2 class="card-title">Export Passwords</h2>
             <div class="row">
                 <div class="col">
-                  <p>Your password will be saved in CSV file in such format: title, username, website, password.
-                  <strong>Store the CSV files securely, preferably in a location that is not directly accessible from the internet. This prevents unauthorized access to your passwords</strong> To make sure your passwords are formatted properly, open your .CSV file. </p>
+                  <p>Your password will be saved in .CSV file in such format: title, username, website, password.
+                  <strong>Store the .CSV files securely, preferably in a location that is not directly accessible from the internet. This prevents unauthorized access to your passwords</strong> To make sure your passwords are formatted properly, open your .CSV file. </p>
                 </div>
               </div>
             <div class="mb-3">

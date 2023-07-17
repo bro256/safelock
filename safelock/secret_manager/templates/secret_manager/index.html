@@ -4,10 +4,10 @@
     <div class="row">
         <h1 class="mb-3">SafeLock</h1>
     </div>
-        <h3>Welcome to SafeLock password manager.</h3>
-    <div class="row">
-        <h2>About</h2>
-        <p>SafeLock is password manager designed to help you keep your online accounts safe and easily accessible.
+        <h4 class="mb-3">Welcome to SafeLock password manager</h4>
+    <div class="mb-3">
+        <h3>About</h3>
+        <p>&#128274; SafeLock is password manager designed to help you keep your online accounts safe and easily accessible.
         <p>Securely manage and protect your passwords online with our SafeLock password manager.
             Our platform offers a convenient and reliable solution for storing, generating, and organizing your passwords in one secure location.
             With state-of-the-art encryption, your sensitive data remains safe from unauthorized access.
@@ -19,9 +19,40 @@
             The source code of SafeLock Password Manager is open source and available on <a href="https://github.com/bro256/safelock">GitHub</a>. Feel free to explore the code, contribute to the project, or report any issues you encounter.    
         </p>
     </div>
+    <h3>Features</h3>
+    <div class="mb-5">
+        <p>
+            <strong>&#9989; User Registration and Authentication.</strong>
+            Allows users to create an account and authenticate themselves securely.
+        </p>
+        <p>
+            <strong>&#9989; Password Storage and Organization.</strong>
+            Provides the ability for users to store and organize their passwords securely in the password manager.
+        </p>
+        <p>
+            <strong>&#9989; Password Generation.</strong>
+            Offers an advanced password generation feature that generates strong and unique passwords for users.
+        </p>
+        <p>
+            <strong>&#9989; Encryption and Data Security.</strong>
+            Encrypts stored passwords to protect them from unauthorized access.
+        </p>
+        <p>
+            <strong>&#9989; Cross-Platform Access.</strong>
+            Lets access passwords from desktops, laptops, and mobile devices.
+        </p>
+        <p>
+            <strong>&#9989; Search.</strong>
+            Enables users to search their password entries.
+        </p>
+        <p>
+            <strong>&#9989; Import and Export.</strong>
+            Allows users to import passwords from other password managers or export their data in CSV format for backup purposes.
+        </p>
+    </div>
     {% if not user.is_authenticated %}
         <div class="row">
-            <p>To access SafeLock, please <a class="btn btn-primary" href="{% url 'login' %}">Sign in</a>
+            <p>To access SafeLock, please <a href="{% url 'login' %}">Sign in</a>
         </div>
     {% endif %}
 {% endblock content %}
