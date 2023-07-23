@@ -1,4 +1,4 @@
-# SafeLock - Django based secret manager
+# SafeLock - Django based password manager
 My first Python project related to cryptography.
 
 ## About
