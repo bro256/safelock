@@ -1,6 +1,5 @@
 from django import forms
 from . import models
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 class PasswordEntryForm(forms.ModelForm):
    

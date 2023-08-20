@@ -36,7 +36,7 @@ python3 manage.py migrate
 
 Create superuser:
 ```
-$ python3 manage.py createsuperuser
+python3 manage.py createsuperuser
 ```
 
 In the same folder as `settings.py` is located, create a new file `local_settings.py` and fill with your secret key, i.e.:
@@ -62,7 +62,7 @@ This Django project uses the local time zone to handle time conversions and disp
 By default, the project is set to use the 'Europe/Vilnius' time zone, which corresponds to the local time zone in Vilnius, Lithuania.
 
 ```
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Vilnius'
 ```
 
 ## Cryptography
