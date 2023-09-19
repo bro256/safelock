@@ -5,6 +5,9 @@ My first Python project related to cryptography.
 SafeLock is password manager designed to help you keep your online accounts safe and easily accessible.
 Securely manage and protect your passwords online with our SafeLock password manager. Our platform offers a convenient and reliable solution for storing, generating, and organizing your passwords in one secure location. With state-of-the-art encryption, your sensitive data remains safe from unauthorized access. Easily access your passwords anytime, anywhere, from any device, ensuring seamless login experiences across all your accounts. Take control of your online security and simplify your digital life with our online password manager, designed to safeguard your credentials and provide peace of mind.
 
+![SafeLock Password Manager](https://github.com/bro256/safelock/blob/main/safelock/secret_manager/static/secret_manager/img/Screenshot01.jpg)
+
+
 ## Features
 - **User Registration and Authentication.** Allows users to create an account and authenticate themselves securely.
 - **Password Storage and Organization.** Provides the ability for users to store and organize their passwords securely in the password manager.
