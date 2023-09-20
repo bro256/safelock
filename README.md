@@ -52,12 +52,11 @@ There are some settings in settings.py you can modify depending on your security
 - Session Cookies
 The `SESSION_COOKIE_AGE` setting in Django determines the age of the session cookie in seconds. It specifies the duration for which a user's session remains active.
 By default, Django uses a session cookie that expires when the user's browser is closed. However, you can set a specific duration for the session cookie using the `SESSION_COOKIE_AGE` setting.
-To configure the session cookie age, update the `SESSION_COOKIE_AGE` value in the Django project's settings.py file. For example, to set the session cookie age to 1 hour (3600 seconds), add the following line to your settings.py file:
+To configure the session cookie age, update the `SESSION_COOKIE_AGE` value in the Django project's settings.py file. For example, to set the session cookie age to 10 minutes (600 seconds), configure it in your settings.py file:
 
 ```
 # Session-related settings
-SESSION_COOKIE_AGE = 3600
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 600  # Session timeout in seconds.
 ```
 
 - Time Zone Configuration

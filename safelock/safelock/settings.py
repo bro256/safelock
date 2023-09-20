@@ -140,5 +140,7 @@ EMAIL_HOST_USER = local_settings.EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = local_settings.EMAIL_HOST_PASSWORD
 
 # Session-related settings
-SESSION_COOKIE_AGE = 36000
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 600  # Session timeout in seconds.
+SESSION_SAVE_EVERY_REQUEST = True  # Save the session on every request.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
